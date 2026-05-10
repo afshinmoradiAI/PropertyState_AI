@@ -1,6 +1,9 @@
 # Secrets
 .env
 .env.local
+.env.prod
+nginx/ssl/
+azure/main.bicepparam
 CLAUDE.local.md
 .claude/settings.local.json
  
@@ -28,4 +31,5 @@ Thumbs.db
  
 # Logs
 *.log
+
 

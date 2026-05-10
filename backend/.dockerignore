@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+htmlcov/
+.coverage
+
+# Dev / test
+tests/
+.env
+.env.*
+!.env.example
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Docs / tooling
+*.md
+railway.json

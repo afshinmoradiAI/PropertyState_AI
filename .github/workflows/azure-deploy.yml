@@ -1,0 +1,143 @@
+name: Deploy to Azure Container Apps
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:      # allow manual trigger from GitHub UI
+
+env:
+  APP_NAME:       propstate
+  RESOURCE_GROUP: propertystate-rg
+  LOCATION:       australiaeast
+
+jobs:
+  # ── Job 1: build + deploy backend ──────────────────────────────────────────
+  deploy-backend:
+    name: Backend → ACR → Container Apps
+    runs-on: ubuntu-latest
+    outputs:
+      backend_url: ${{ steps.urls.outputs.backend_url }}
+      acr_name:    ${{ steps.urls.outputs.acr_name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get ACR name from resource group
+        id: acr
+        run: |
+          ACR=$(az acr list --resource-group $RESOURCE_GROUP --query "[0].name" -o tsv)
+          echo "name=$ACR" >> $GITHUB_OUTPUT
+          echo "server=$(az acr show --name $ACR --query loginServer -o tsv)" >> $GITHUB_OUTPUT
+
+      - name: Build + push backend image to ACR
+        run: |
+          az acr build \
+            --registry ${{ steps.acr.outputs.name }} \
+            --image ${{ env.APP_NAME }}-backend:${{ github.sha }} \
+            --file backend/Dockerfile \
+            ./backend
+
+      - name: Deploy backend to Container Apps
+        run: |
+          az containerapp update \
+            --name ${{ env.APP_NAME }}-backend \
+            --resource-group $RESOURCE_GROUP \
+            --image ${{ steps.acr.outputs.server }}/${{ env.APP_NAME }}-backend:${{ github.sha }} \
+            --output none
+
+      - name: Get URLs
+        id: urls
+        run: |
+          BACKEND=$(az containerapp show \
+            --name ${{ env.APP_NAME }}-backend \
+            --resource-group $RESOURCE_GROUP \
+            --query "properties.configuration.ingress.fqdn" -o tsv)
+          echo "backend_url=https://$BACKEND" >> $GITHUB_OUTPUT
+          echo "acr_name=${{ steps.acr.outputs.name }}"  >> $GITHUB_OUTPUT
+
+  # ── Job 2: build frontend with backend URL baked in, then deploy ────────────
+  deploy-frontend:
+    name: Frontend → ACR → Container Apps
+    runs-on: ubuntu-latest
+    needs: deploy-backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get ACR server
+        id: acr
+        run: |
+          echo "server=$(az acr show --name ${{ needs.deploy-backend.outputs.acr_name }} --query loginServer -o tsv)" >> $GITHUB_OUTPUT
+
+      - name: Build + push frontend image (with backend URL)
+        run: |
+          az acr build \
+            --registry ${{ needs.deploy-backend.outputs.acr_name }} \
+            --image ${{ env.APP_NAME }}-frontend:${{ github.sha }} \
+            --file frontend/Dockerfile \
+            --build-arg "NEXT_PUBLIC_API_URL=${{ needs.deploy-backend.outputs.backend_url }}/api" \
+            ./frontend
+
+      - name: Deploy frontend to Container Apps
+        run: |
+          az containerapp update \
+            --name ${{ env.APP_NAME }}-frontend \
+            --resource-group $RESOURCE_GROUP \
+            --image ${{ steps.acr.outputs.server }}/${{ env.APP_NAME }}-frontend:${{ github.sha }} \
+            --output none
+
+      - name: Print live URLs
+        run: |
+          FRONTEND=$(az containerapp show \
+            --name ${{ env.APP_NAME }}-frontend \
+            --resource-group $RESOURCE_GROUP \
+            --query "properties.configuration.ingress.fqdn" -o tsv)
+          echo ""
+          echo "✅ Deployed successfully"
+          echo "   Frontend : https://$FRONTEND"
+          echo "   Backend  : ${{ needs.deploy-backend.outputs.backend_url }}"
+          echo ""
+
+  # ── Job 3: run backend tests before deploy (optional gate) ─────────────────
+  test:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Run tests
+        env:
+          ANTHROPIC_API_KEY: test-key-for-ci
+        run: uv run pytest tests/ -q
+
+# ── Require tests to pass before deploying ────────────────────────────────────
+# Uncomment to enforce:
+#   deploy-backend:
+#     needs: test
