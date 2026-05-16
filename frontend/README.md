@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PropertyState AI — Frontend
+
+Next.js 15 frontend for the PropertyState AI property investment analyser.
+
+## Stack
+
+- **Next.js 15** (App Router)
+- **TypeScript**
+- **Tailwind CSS**
+- **next/image** for optimised images
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+cp .env.example .env.local
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Default | Description |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | PropertyState AI backend URL |
 
-## Learn More
+## Pages
 
-To learn more about Next.js, take a look at the following resources:
+| Route | Description |
+|---|---|
+| `/` | Hero landing page + property analysis form and streaming results |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## How streaming works
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The form submits to `POST /api/property/analyze/stream` on the backend. The response is a Server-Sent Events stream. As each of the five AI agents completes, a partial result card appears in the UI. A skeleton loader is shown while each card is waiting.
 
-## Deploy on Vercel
+Event order: `rental_yield` → `cashflow` → `roi` → `location_risk` → `investment_potential` → `complete`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Build
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run build   # production build
+npm start       # serve production build
+npx tsc --noEmit  # type check
+```
+
+## Docker
+
+The `Dockerfile` in this directory produces a standalone Next.js image. It is used by `docker-compose.yml` at the project root.
+
+```bash
+# From project root
+docker compose up --build frontend
+```
+
+The build arg `NEXT_PUBLIC_API_URL` is passed at build time from `docker-compose.yml`.
