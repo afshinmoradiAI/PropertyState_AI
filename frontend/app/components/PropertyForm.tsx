@@ -39,15 +39,18 @@ export default function PropertyForm({ onSubmit, loading }: Props) {
   }
 
   const inputClass =
-    'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100'
-  const labelClass = 'block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1'
+    'w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 transition-colors'
+    + ' border-amber-200 bg-amber-50/30 text-stone-800 placeholder-stone-400'
+    + ' focus:border-amber-600 focus:ring-amber-100'
+  const labelClass = 'block text-xs font-semibold uppercase tracking-wide mb-1' +
+    ' text-amber-800'
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Property Identity */}
       <section>
-        <h3 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 text-xs flex items-center justify-center font-bold">1</span>
+        <h3 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: '#2C1A0E' }}>
+          <span className="w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold text-white" style={{ background: '#8B5E3C' }}>1</span>
           Property Details
         </h3>
         <div className="grid grid-cols-1 gap-3">
@@ -104,8 +107,8 @@ export default function PropertyForm({ onSubmit, loading }: Props) {
 
       {/* Financials */}
       <section>
-        <h3 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 text-xs flex items-center justify-center font-bold">2</span>
+        <h3 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: '#2C1A0E' }}>
+          <span className="w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold text-white" style={{ background: '#8B5E3C' }}>2</span>
           Financials
         </h3>
         <div className="grid grid-cols-1 gap-3">
@@ -146,9 +149,10 @@ export default function PropertyForm({ onSubmit, loading }: Props) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-xl bg-blue-600 py-3 text-sm font-bold text-white hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full rounded-xl py-3 text-sm font-bold text-white active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{ background: loading ? '#A07850' : 'linear-gradient(135deg, #6B3A1F, #C4956A)' }}
       >
-        {loading ? 'Analysing…' : 'Analyse Property'}
+        {loading ? 'Analysing…' : 'Analyse Property →'}
       </button>
     </form>
   )

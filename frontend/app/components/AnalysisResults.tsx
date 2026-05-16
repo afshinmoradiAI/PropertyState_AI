@@ -65,11 +65,11 @@ function ScoreBar({ score, max = 10 }: { score: number; max?: number }) {
 
 function Card({ title, icon, children, loading }: { title: string; icon: string; children: React.ReactNode; loading?: boolean }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+    <div className="rounded-2xl shadow-sm p-5" style={{ backgroundColor: '#fff', border: '1px solid #E8D5B7' }}>
       <div className="flex items-center gap-2 mb-4">
         <span className="text-xl">{icon}</span>
-        <h3 className="font-bold text-slate-800">{title}</h3>
-        {loading && <span className="ml-auto text-xs text-slate-400 animate-pulse">Analysing…</span>}
+        <h3 className="font-bold" style={{ color: '#2C1A0E' }}>{title}</h3>
+        {loading && <span className="ml-auto text-xs animate-pulse" style={{ color: '#A07850' }}>Analysing…</span>}
       </div>
       {children}
     </div>
@@ -78,11 +78,11 @@ function Card({ title, icon, children, loading }: { title: string; icon: string;
 
 function Row({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
-      <span className="text-sm text-slate-500">{label}</span>
+    <div className="flex items-center justify-between py-1.5 last:border-0" style={{ borderBottom: '1px solid #F5EDE3' }}>
+      <span className="text-sm" style={{ color: '#8B5E3C' }}>{label}</span>
       <div className="text-right">
-        <span className="text-sm font-semibold text-slate-800">{value}</span>
-        {sub && <div className="text-xs text-slate-400">{sub}</div>}
+        <span className="text-sm font-semibold" style={{ color: '#2C1A0E' }}>{value}</span>
+        {sub && <div className="text-xs" style={{ color: '#A07850' }}>{sub}</div>}
       </div>
     </div>
   )
@@ -96,33 +96,44 @@ export default function AnalysisResults({ rentalYield, cashflow, roi, locationRi
 
       {/* Verdict Banner */}
       {investmentPotential && (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+        <div className="rounded-2xl shadow-sm p-6" style={{ backgroundColor: '#fff', border: '1px solid #E8D5B7' }}>
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Investment Verdict</p>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#A07850' }}>Investment Verdict</p>
               <VerdictBadge verdict={investmentPotential.verdict} />
-              <span className="ml-3 text-sm text-slate-500">Confidence: <b className="text-slate-700">{investmentPotential.confidence}</b></span>
+              <span className="ml-3 text-sm" style={{ color: '#8B5E3C' }}>
+                Confidence: <b style={{ color: '#2C1A0E' }}>{investmentPotential.confidence}</b>
+              </span>
             </div>
             <div className="text-right">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Overall Score</p>
-              <div className="text-3xl font-black text-slate-800">{investmentPotential.overall_score}<span className="text-base font-normal text-slate-400">/10</span></div>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#A07850' }}>Overall Score</p>
+              <div className="text-3xl font-black" style={{ color: '#2C1A0E' }}>
+                {investmentPotential.overall_score}
+                <span className="text-base font-normal" style={{ color: '#A07850' }}>/10</span>
+              </div>
             </div>
           </div>
-          <p className="mt-4 text-sm text-slate-600 leading-relaxed border-t border-slate-50 pt-4">{investmentPotential.recommendation}</p>
+          <p className="mt-4 text-sm leading-relaxed pt-4" style={{ color: '#4A2C0A', borderTop: '1px solid #F5EDE3' }}>
+            {investmentPotential.recommendation}
+          </p>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div>
-              <p className="text-xs font-bold text-emerald-600 mb-2">Strengths</p>
+              <p className="text-xs font-bold mb-2 text-emerald-700">Strengths</p>
               <ul className="space-y-1">
                 {investmentPotential.key_strengths.map((s, i) => (
-                  <li key={i} className="text-xs text-slate-600 flex gap-1.5"><span className="text-emerald-500 mt-0.5">✓</span>{s}</li>
+                  <li key={i} className="text-xs flex gap-1.5" style={{ color: '#4A2C0A' }}>
+                    <span className="text-emerald-600 mt-0.5">✓</span>{s}
+                  </li>
                 ))}
               </ul>
             </div>
             <div>
-              <p className="text-xs font-bold text-red-500 mb-2">Risks</p>
+              <p className="text-xs font-bold mb-2 text-red-600">Risks</p>
               <ul className="space-y-1">
                 {investmentPotential.key_risks.map((r, i) => (
-                  <li key={i} className="text-xs text-slate-600 flex gap-1.5"><span className="text-red-400 mt-0.5">!</span>{r}</li>
+                  <li key={i} className="text-xs flex gap-1.5" style={{ color: '#4A2C0A' }}>
+                    <span className="text-red-500 mt-0.5">!</span>{r}
+                  </li>
                 ))}
               </ul>
             </div>
