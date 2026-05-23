@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend (pytest + ruff + coverage)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        working-directory: backend
+        run: uv sync --all-extras --dev
+
+      - name: Lint with ruff
+        working-directory: backend
+        run: uv run ruff check .
+
+      - name: Run tests with coverage
+        working-directory: backend
+        env:
+          ANTHROPIC_API_KEY: sk-ant-dummy-key-for-ci
+          JWT_SECRET: ci-test-secret-do-not-use-in-prod
+        run: uv run pytest --cov=app --cov-report=term-missing --cov-report=xml -v
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage.xml
+
+      - name: Dependency vulnerability scan (pip-audit)
+        working-directory: backend
+        continue-on-error: true  # non-blocking; surfaces vulns without failing CI
+        run: uv run --with pip-audit pip-audit --strict || true
+
+  frontend:
+    name: Frontend (tsc + build + audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Type check
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+      - name: Build
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: npm run build
+
+      - name: Dependency vulnerability scan (npm audit)
+        working-directory: frontend
+        continue-on-error: true
+        run: npm audit --omit=dev || true
+
+  secrets:
+    name: Secret scanning (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # gitleaks needs history
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

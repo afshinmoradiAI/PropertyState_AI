@@ -177,6 +177,7 @@ docker compose up --build
 | `MAX_TOKENS` | No | `2048` | Max tokens per agent call |
 | `LOG_LEVEL` | No | `INFO` | Python logging level |
 | `ALLOWED_ORIGINS` | No | `http://localhost:3000` | Comma-separated CORS origins |
+| `DATA_DIR` | No | `./data` | Directory for the SQLite DB file |
 
 ### Frontend (`frontend/.env.local`)
 
@@ -191,6 +192,22 @@ docker compose up --build
 ### `GET /health`
 
 Returns `{"status": "ok"}`. Used by Docker healthcheck.
+
+---
+
+### Library endpoints
+
+| Route | Description |
+|---|---|
+| `GET /api/library?limit=50&offset=0` | Paginated list of saved report summaries |
+| `GET /api/library/{id}` | Full saved `PropertyReport` |
+| `DELETE /api/library/{id}` | Delete a saved report |
+
+Every completed analysis is automatically saved. The streaming endpoint also emits a `saved` event after `complete`:
+
+```
+data: {"event": "saved", "data": {"report_id": "abc123…"}}
+```
 
 ---
 

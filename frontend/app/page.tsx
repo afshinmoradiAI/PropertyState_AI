@@ -1,15 +1,23 @@
 'use client'
 import { useState, useRef } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import PropertyForm from './components/PropertyForm'
 import AnalysisResults from './components/AnalysisResults'
+import WhatIfSimulator from './components/WhatIfSimulator'
+import UserMenu from './components/UserMenu'
+import SettingsDialog from './components/SettingsDialog'
+import { authHeaders } from './lib/auth'
+import { modelHeader } from './lib/model'
 import {
   PropertyInput,
   RentalYieldResult,
   CashflowResult,
   ROIResult,
   LocationRiskResult,
+  TaxDepreciationResult,
   InvestmentPotentialResult,
+  NegotiationResult,
   PropertyReport,
   StreamEvent,
 } from './types/property'
@@ -21,7 +29,9 @@ interface PartialResults {
   cashflow?: CashflowResult
   roi?: ROIResult
   locationRisk?: LocationRiskResult
+  taxDepreciation?: TaxDepreciationResult
   investmentPotential?: InvestmentPotentialResult
+  negotiation?: NegotiationResult
   report?: PropertyReport
 }
 
@@ -36,17 +46,22 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [results, setResults] = useState<PartialResults>({})
+  const [lastProperty, setLastProperty] = useState<PropertyInput | null>(null)
+  const [savedReportId, setSavedReportId] = useState<string | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
 
   async function handleSubmit(property: PropertyInput) {
     setLoading(true)
     setError(null)
     setResults({})
+    setSavedReportId(null)
+    setLastProperty(property)
 
     try {
       const res = await fetch(`${API}/api/property/analyze/stream`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders(), ...modelHeader() },
         body: JSON.stringify({ property }),
       })
 
@@ -78,8 +93,11 @@ export default function Home() {
           if (event.event === 'cashflow') setResults(p => ({ ...p, cashflow: event.data as CashflowResult }))
           if (event.event === 'roi') setResults(p => ({ ...p, roi: event.data as ROIResult }))
           if (event.event === 'location_risk') setResults(p => ({ ...p, locationRisk: event.data as LocationRiskResult }))
+          if (event.event === 'tax_depreciation') setResults(p => ({ ...p, taxDepreciation: event.data as TaxDepreciationResult }))
           if (event.event === 'investment_potential') setResults(p => ({ ...p, investmentPotential: event.data as InvestmentPotentialResult }))
+          if (event.event === 'negotiation') setResults(p => ({ ...p, negotiation: event.data as NegotiationResult }))
           if (event.event === 'complete') setResults(p => ({ ...p, report: event.data as PropertyReport }))
+          if (event.event === 'saved') setSavedReportId((event.data as { report_id: string }).report_id)
         }
       }
     } catch (err) {
@@ -111,13 +129,61 @@ export default function Home() {
               <p className="text-xs" style={{ color: '#C4956A' }}>Australian Property Intelligence</p>
             </div>
           </div>
-          <button
-            onClick={scrollToForm}
-            className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:scale-105"
-            style={{ background: 'linear-gradient(135deg, #8B5E3C, #C4956A)', color: '#FFF8F0' }}
-          >
-            Analyse a Property
-          </button>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/library"
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+              style={{
+                backgroundColor: 'rgba(196,149,106,0.15)',
+                color: '#E8C9A0',
+                border: '1px solid rgba(196,149,106,0.4)',
+              }}
+            >
+              📚 Library
+            </Link>
+            <Link
+              href="/suburb"
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+              style={{
+                backgroundColor: 'rgba(196,149,106,0.15)',
+                color: '#E8C9A0',
+                border: '1px solid rgba(196,149,106,0.4)',
+              }}
+            >
+              Suburb Search →
+            </Link>
+            <Link
+              href="/compare"
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+              style={{
+                backgroundColor: 'rgba(196,149,106,0.15)',
+                color: '#E8C9A0',
+                border: '1px solid rgba(196,149,106,0.4)',
+              }}
+            >
+              Compare Mode →
+            </Link>
+            <button
+              onClick={scrollToForm}
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:scale-105"
+              style={{ background: 'linear-gradient(135deg, #8B5E3C, #C4956A)', color: '#FFF8F0' }}
+            >
+              Analyse a Property
+            </button>
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="hidden sm:inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all"
+              style={{
+                backgroundColor: 'rgba(196,149,106,0.15)',
+                color: '#E8C9A0',
+                border: '1px solid rgba(196,149,106,0.4)',
+              }}
+              aria-label="Settings"
+            >
+              ⚙️
+            </button>
+            <UserMenu />
+          </div>
         </div>
       </header>
 
@@ -235,15 +301,67 @@ export default function Home() {
                     {error}
                   </div>
                 )}
+                {savedReportId && (
+                  <div className="mb-4 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                    style={{ background: 'linear-gradient(135deg, #FFF8F0 0%, #F5EDE3 100%)', border: '1px solid #C4956A' }}>
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: '#8B5E3C' }}>
+                        🔗 Shareable link
+                      </p>
+                      <p className="text-xs" style={{ color: '#6B3A1F' }}>
+                        Saved to library — anyone with the link can view this report
+                      </p>
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      <a
+                        href={`/r/${savedReportId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-lg px-3 py-2 text-xs font-bold"
+                        style={{ backgroundColor: '#fff', color: '#6B3A1F', border: '1px solid #C4956A' }}
+                      >
+                        Open
+                      </a>
+                      <button
+                        onClick={() => {
+                          const url = `${location.origin}/r/${savedReportId}`
+                          navigator.clipboard.writeText(url).then(() => {
+                            const btn = document.activeElement as HTMLButtonElement
+                            const orig = btn.textContent
+                            btn.textContent = 'Copied!'
+                            setTimeout(() => { btn.textContent = orig }, 1500)
+                          })
+                        }}
+                        className="rounded-lg px-3 py-2 text-xs font-bold text-white"
+                        style={{ background: 'linear-gradient(135deg, #6B3A1F, #C4956A)' }}
+                      >
+                        Copy Link
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <AnalysisResults
                   rentalYield={results.rentalYield}
                   cashflow={results.cashflow}
                   roi={results.roi}
                   locationRisk={results.locationRisk}
+                  taxDepreciation={results.taxDepreciation}
                   investmentPotential={results.investmentPotential}
+                  negotiation={results.negotiation}
                   report={results.report}
                   loading={loading}
                 />
+
+                {/* What-if Simulator — appears after investment_potential arrives */}
+                {lastProperty && results.investmentPotential && (
+                  <div className="mt-4">
+                    <WhatIfSimulator
+                      baseProperty={lastProperty}
+                      onRecalculate={handleSubmit}
+                      loading={loading}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -260,6 +378,8 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {/* ── Footer ── */}
       <footer className="py-8 px-6 text-center" style={{ backgroundColor: '#1A0F07', borderTop: '1px solid rgba(196,149,106,0.2)' }}>

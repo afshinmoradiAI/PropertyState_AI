@@ -63,6 +63,18 @@ class LocationRiskResult(BaseModel):
     commentary: str
 
 
+class TaxDepreciationResult(BaseModel):
+    marginal_tax_rate_pct: float  # assumed top-up rate (e.g., 32.5 / 37 / 45)
+    annual_depreciation_total: float
+    division_40_depreciation: float  # plant & equipment (appliances, carpets, blinds)
+    division_43_depreciation: float  # capital works (building structure)
+    annual_tax_deductible_loss: float  # rental income - all deductions
+    estimated_annual_tax_benefit: float  # tax saved via negative gearing
+    after_tax_weekly_cashflow: float
+    is_negatively_geared: bool
+    commentary: str
+
+
 class InvestmentPotentialResult(BaseModel):
     verdict: str  # BUY | HOLD | AVOID
     confidence: str  # high | medium | low
@@ -72,13 +84,27 @@ class InvestmentPotentialResult(BaseModel):
     recommendation: str
 
 
+class NegotiationResult(BaseModel):
+    asking_price: float
+    recommended_max_offer: float
+    suggested_opening_offer: float
+    walk_away_price: float
+    estimated_savings_potential: float  # asking - recommended_max
+    market_position: str  # buyers_market | balanced | sellers_market
+    negotiation_levers: list[str]
+    confidence: str  # high | medium | low
+    strategy: str
+
+
 class PropertyReport(BaseModel):
     property: PropertyInput
     rental_yield: RentalYieldResult
     cashflow: CashflowResult
     roi: ROIResult
     location_risk: LocationRiskResult
+    tax_depreciation: TaxDepreciationResult
     investment_potential: InvestmentPotentialResult
+    negotiation: NegotiationResult
     generated_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     tokens_used: int = 0
 
@@ -89,3 +115,23 @@ class AnalyzeRequest(BaseModel):
 
 class AnalyzeResponse(BaseModel):
     report: PropertyReport
+    report_id: str | None = None
+
+
+class CompareRequest(BaseModel):
+    properties: list[PropertyInput] = Field(..., min_length=2, max_length=3)
+
+
+class CompareResponse(BaseModel):
+    reports: list[PropertyReport]
+
+
+class ChatMessage(BaseModel):
+    role: str  # "user" | "assistant"
+    content: str
+
+
+class ChatRequest(BaseModel):
+    report: PropertyReport
+    history: list[ChatMessage] = Field(default_factory=list)
+    message: str

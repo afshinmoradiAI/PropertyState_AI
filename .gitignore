@@ -32,4 +32,10 @@ Thumbs.db
 # Logs
 *.log
 
+# SQLite data
+backend/data/
+*.db
+*.db-shm
+*.db-wal
+
 

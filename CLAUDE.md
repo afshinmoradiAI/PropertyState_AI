@@ -42,9 +42,17 @@ See `.claude/rules/agent-conventions.md` for the full agent ruleset.
 
 See `.claude/rules/api-conventions.md` for the full API ruleset.
 
-### Schemas (`backend/app/schemas/property.py`)
+### Schemas (`backend/app/schemas/property.py` and `suburb.py`)
 
-All Pydantic models are defined here. The TypeScript types in `frontend/app/types/property.ts` must stay in sync whenever schemas change.
+All Pydantic models are defined here. The TypeScript types in `frontend/app/types/property.ts`, `suburb.ts`, and `library.ts` must stay in sync whenever schemas change.
+
+### Persistence (`backend/app/core/db.py`, `services/report_store.py`)
+
+- SQLite via `aiosqlite` (async). DB file lives at `${DATA_DIR}/propertystate.db`. WAL mode + foreign keys enabled.
+- Schema is bootstrapped on app startup via `init_db()` in the FastAPI lifespan handler.
+- `report_store.py` is the only module that reads/writes the `reports` table. Routes never touch SQLite directly.
+- Completed analyses (both `/analyze` and `/analyze/stream`) auto-save and return a `report_id`.
+- Tests use `tmp_path` + `monkeypatch` to point `DATA_DIR` at a temp dir per test.
 
 ### Prompts (`backend/app/prompts/`)
 

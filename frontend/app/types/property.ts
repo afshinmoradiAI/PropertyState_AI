@@ -57,6 +57,18 @@ export interface LocationRiskResult {
   commentary: string
 }
 
+export interface TaxDepreciationResult {
+  marginal_tax_rate_pct: number
+  annual_depreciation_total: number
+  division_40_depreciation: number
+  division_43_depreciation: number
+  annual_tax_deductible_loss: number
+  estimated_annual_tax_benefit: number
+  after_tax_weekly_cashflow: number
+  is_negatively_geared: boolean
+  commentary: string
+}
+
 export interface InvestmentPotentialResult {
   verdict: string
   confidence: string
@@ -66,13 +78,27 @@ export interface InvestmentPotentialResult {
   recommendation: string
 }
 
+export interface NegotiationResult {
+  asking_price: number
+  recommended_max_offer: number
+  suggested_opening_offer: number
+  walk_away_price: number
+  estimated_savings_potential: number
+  market_position: string
+  negotiation_levers: string[]
+  confidence: string
+  strategy: string
+}
+
 export interface PropertyReport {
   property: PropertyInput
   rental_yield: RentalYieldResult
   cashflow: CashflowResult
   roi: ROIResult
   location_risk: LocationRiskResult
+  tax_depreciation: TaxDepreciationResult
   investment_potential: InvestmentPotentialResult
+  negotiation: NegotiationResult
   generated_at: string
   tokens_used: number
 }
@@ -82,6 +108,9 @@ export type StreamEvent =
   | { event: 'cashflow'; data: CashflowResult }
   | { event: 'roi'; data: ROIResult }
   | { event: 'location_risk'; data: LocationRiskResult }
+  | { event: 'tax_depreciation'; data: TaxDepreciationResult }
   | { event: 'investment_potential'; data: InvestmentPotentialResult }
+  | { event: 'negotiation'; data: NegotiationResult }
   | { event: 'complete'; data: PropertyReport }
+  | { event: 'saved'; data: { report_id: string } }
   | { event: 'error'; data: { message: string } }

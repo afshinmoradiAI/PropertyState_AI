@@ -1,15 +1,20 @@
 'use client'
 import {
   RentalYieldResult, CashflowResult, ROIResult,
-  LocationRiskResult, InvestmentPotentialResult, PropertyReport
+  LocationRiskResult, TaxDepreciationResult, InvestmentPotentialResult,
+  NegotiationResult, PropertyReport
 } from '../types/property'
+import DownloadReportButton from './DownloadReportButton'
+import ReportChat from './ReportChat'
 
 interface Props {
   rentalYield?: RentalYieldResult
   cashflow?: CashflowResult
   roi?: ROIResult
   locationRisk?: LocationRiskResult
+  taxDepreciation?: TaxDepreciationResult
   investmentPotential?: InvestmentPotentialResult
+  negotiation?: NegotiationResult
   report?: PropertyReport
   loading: boolean
 }
@@ -76,6 +81,21 @@ function Card({ title, icon, children, loading }: { title: string; icon: string;
   )
 }
 
+function PriceBlock({ label, value, tone, hint }: { label: string; value: string; tone: 'neutral' | 'good' | 'warn'; hint?: string }) {
+  const colors = {
+    neutral: { bg: '#fff', border: '#E8D5B7', text: '#2C1A0E', label: '#8B5E3C' },
+    good: { bg: '#fff', border: '#C4956A', text: '#065F46', label: '#6B3A1F' },
+    warn: { bg: '#FEF3C7', border: '#F59E0B', text: '#92400E', label: '#92400E' },
+  }[tone]
+  return (
+    <div className="rounded-xl p-3" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}>
+      <div className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: colors.label }}>{label}</div>
+      <div className="text-lg font-black leading-tight" style={{ color: colors.text }}>{value}</div>
+      {hint && <div className="text-[10px] mt-1" style={{ color: colors.label }}>{hint}</div>}
+    </div>
+  )
+}
+
 function Row({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="flex items-center justify-between py-1.5 last:border-0" style={{ borderBottom: '1px solid #F5EDE3' }}>
@@ -88,8 +108,8 @@ function Row({ label, value, sub }: { label: string; value: string; sub?: string
   )
 }
 
-export default function AnalysisResults({ rentalYield, cashflow, roi, locationRisk, investmentPotential, report, loading }: Props) {
-  if (!rentalYield && !cashflow && !roi && !locationRisk && !investmentPotential && !loading) return null
+export default function AnalysisResults({ rentalYield, cashflow, roi, locationRisk, taxDepreciation, investmentPotential, negotiation, report, loading }: Props) {
+  if (!rentalYield && !cashflow && !roi && !locationRisk && !taxDepreciation && !investmentPotential && !negotiation && !loading) return null
 
   return (
     <div className="space-y-4">
@@ -138,6 +158,72 @@ export default function AnalysisResults({ rentalYield, cashflow, roi, locationRi
               </ul>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Negotiation Strategy — prominent, after verdict */}
+      {negotiation && (
+        <div className="rounded-2xl shadow-sm p-6"
+          style={{
+            background: 'linear-gradient(135deg, #FFF8F0 0%, #F5EDE3 100%)',
+            border: '1px solid #C4956A',
+          }}>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-xl">🤝</span>
+            <h3 className="font-bold" style={{ color: '#2C1A0E' }}>Negotiation Strategy</h3>
+            <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-semibold"
+              style={{ backgroundColor: '#fff', color: '#8B5E3C', border: '1px solid #E8D5B7' }}>
+              {negotiation.market_position.replace(/_/g, ' ')} · {negotiation.confidence} confidence
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+            <PriceBlock
+              label="Asking"
+              value={fmtCurrency(negotiation.asking_price)}
+              tone="neutral"
+            />
+            <PriceBlock
+              label="Opening offer"
+              value={fmtCurrency(negotiation.suggested_opening_offer)}
+              tone="good"
+              hint="Start here"
+            />
+            <PriceBlock
+              label="Max offer"
+              value={fmtCurrency(negotiation.recommended_max_offer)}
+              tone="good"
+              hint="Fair value"
+            />
+            <PriceBlock
+              label="Walk away"
+              value={fmtCurrency(negotiation.walk_away_price)}
+              tone="warn"
+              hint="Don't go over"
+            />
+          </div>
+
+          {negotiation.estimated_savings_potential > 0 && (
+            <div className="mb-4 text-sm" style={{ color: '#065F46' }}>
+              <b>Potential savings:</b> up to {fmtCurrency(negotiation.estimated_savings_potential)} below asking
+            </div>
+          )}
+
+          <div className="mb-4">
+            <p className="text-xs font-bold mb-2" style={{ color: '#6B3A1F' }}>Negotiation levers (in priority)</p>
+            <div className="flex flex-wrap gap-2">
+              {negotiation.negotiation_levers.map((lever, i) => (
+                <span key={i} className="text-xs font-semibold px-3 py-1 rounded-full"
+                  style={{ backgroundColor: '#fff', color: '#6B3A1F', border: '1px solid #C4956A' }}>
+                  {i + 1}. {lever}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-sm leading-relaxed" style={{ color: '#4A2C0A' }}>
+            <b>Strategy: </b>{negotiation.strategy}
+          </p>
         </div>
       )}
 
@@ -245,12 +331,64 @@ export default function AnalysisResults({ rentalYield, cashflow, roi, locationRi
             <div className="h-24 animate-pulse bg-slate-50 rounded-lg" />
           )}
         </Card>
+
+        {/* Tax & Depreciation */}
+        <Card title="Tax & Depreciation" icon="🧾" loading={loading && !taxDepreciation}>
+          {taxDepreciation ? (
+            <>
+              <Row label="Marginal Tax Rate (assumed)" value={fmtPct(taxDepreciation.marginal_tax_rate_pct)} />
+              <Row
+                label="Annual Depreciation"
+                value={fmtCurrency(taxDepreciation.annual_depreciation_total)}
+                sub={`Div 40: ${fmtCurrency(taxDepreciation.division_40_depreciation)} · Div 43: ${fmtCurrency(taxDepreciation.division_43_depreciation)}`}
+              />
+              <Row
+                label="Annual Deductible Loss"
+                value={(taxDepreciation.annual_tax_deductible_loss >= 0 ? '' : '+') + fmtCurrency(taxDepreciation.annual_tax_deductible_loss)}
+              />
+              <Row label="Est. Annual Tax Benefit" value={fmtCurrency(taxDepreciation.estimated_annual_tax_benefit)} />
+              <Row
+                label="After-Tax Cashflow"
+                value={(taxDepreciation.after_tax_weekly_cashflow >= 0 ? '+' : '-') + fmtCurrency(taxDepreciation.after_tax_weekly_cashflow) + '/wk'}
+              />
+              <div
+                className="mt-2 text-xs font-bold px-3 py-1.5 rounded-lg inline-block"
+                style={{
+                  backgroundColor: taxDepreciation.is_negatively_geared ? '#FEF3C7' : '#D1FAE5',
+                  color: taxDepreciation.is_negatively_geared ? '#92400E' : '#065F46',
+                }}
+              >
+                {taxDepreciation.is_negatively_geared ? 'Negatively Geared' : 'Positively Geared'}
+              </div>
+              <p className="mt-3 text-xs leading-relaxed" style={{ color: '#8B5E3C' }}>{taxDepreciation.commentary}</p>
+              <p className="mt-2 text-[10px] italic" style={{ color: '#A07850' }}>
+                Estimates only — confirm with a quantity surveyor & accountant.
+              </p>
+            </>
+          ) : (
+            <div className="h-24 animate-pulse bg-slate-50 rounded-lg" />
+          )}
+        </Card>
       </div>
 
       {report && (
-        <p className="text-xs text-center text-slate-400">
-          Generated at {new Date(report.generated_at).toLocaleString('en-AU')} · {report.tokens_used.toLocaleString()} tokens used
-        </p>
+        <>
+          <div className="rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4"
+            style={{
+              background: 'linear-gradient(135deg, #2C1A0E 0%, #6B3A1F 100%)',
+            }}>
+            <div className="text-left">
+              <p className="text-sm font-bold" style={{ color: '#FFF8F0' }}>Analysis complete</p>
+              <p className="text-xs mt-0.5" style={{ color: '#C4956A' }}>
+                Generated {new Date(report.generated_at).toLocaleString('en-AU')} · {report.tokens_used.toLocaleString()} tokens used
+              </p>
+            </div>
+            <DownloadReportButton report={report} />
+          </div>
+
+          {/* Chat with the report */}
+          <ReportChat report={report} />
+        </>
       )}
     </div>
   )

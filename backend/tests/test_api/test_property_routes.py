@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import AsyncMock, patch
 from httpx import AsyncClient, ASGITransport
 from app.main import app
-from app.schemas.property import PropertyReport, PropertyInput, RentalYieldResult, CashflowResult, ROIResult, LocationRiskResult, InvestmentPotentialResult
+from app.schemas.property import PropertyReport, PropertyInput, RentalYieldResult, CashflowResult, ROIResult, LocationRiskResult, TaxDepreciationResult, InvestmentPotentialResult, NegotiationResult
 from datetime import datetime
 
 SAMPLE_PAYLOAD = {
@@ -48,10 +48,32 @@ MOCK_REPORT = PropertyReport(
         overall_risk_level="medium", key_drivers=["Transport", "Schools", "Employment"],
         commentary="Good suburb."
     ),
+    tax_depreciation=TaxDepreciationResult(
+        marginal_tax_rate_pct=37.0,
+        annual_depreciation_total=11000.0,
+        division_40_depreciation=5000.0,
+        division_43_depreciation=6000.0,
+        annual_tax_deductible_loss=15000.0,
+        estimated_annual_tax_benefit=5550.0,
+        after_tax_weekly_cashflow=-423.0,
+        is_negatively_geared=True,
+        commentary="Solid depreciation for a new build.",
+    ),
     investment_potential=InvestmentPotentialResult(
         verdict="BUY", confidence="medium", overall_score=7,
         key_strengths=["Good yield", "Infrastructure"], key_risks=["Negative cashflow"],
         recommendation="Buy and hold for capital growth."
+    ),
+    negotiation=NegotiationResult(
+        asking_price=800000,
+        recommended_max_offer=760000,
+        suggested_opening_offer=730000,
+        walk_away_price=775000,
+        estimated_savings_potential=40000,
+        market_position="balanced",
+        negotiation_levers=["Price", "Settlement period", "Inclusions"],
+        confidence="medium",
+        strategy="Offer 730k, settle around 760k. Push for 8-week settlement and white goods.",
     ),
     tokens_used=2000,
 )
@@ -66,7 +88,13 @@ async def test_health():
 
 
 @pytest.mark.asyncio
-async def test_analyze_returns_report():
+async def test_analyze_returns_report(tmp_path, monkeypatch):
+    # Point the DB at a temp file so persistence works in tests
+    from app.core import db
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "data_dir", str(tmp_path))
+    await db.init_db()
+
     with patch("app.api.routes_property._orchestrator.analyze", new=AsyncMock(return_value=MOCK_REPORT)):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             r = await client.post("/api/property/analyze", json=SAMPLE_PAYLOAD)
@@ -74,3 +102,4 @@ async def test_analyze_returns_report():
     assert r.status_code == 200
     body = r.json()
     assert body["report"]["investment_potential"]["verdict"] == "BUY"
+    assert body["report_id"] and len(body["report_id"]) == 32
