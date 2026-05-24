@@ -92,16 +92,38 @@ export interface NegotiationResult {
 
 export interface PropertyReport {
   property: PropertyInput
-  rental_yield: RentalYieldResult
-  cashflow: CashflowResult
-  roi: ROIResult
-  location_risk: LocationRiskResult
-  tax_depreciation: TaxDepreciationResult
-  investment_potential: InvestmentPotentialResult
-  negotiation: NegotiationResult
+  // Each result is optional — users can pick which analyses to run.
+  rental_yield?: RentalYieldResult | null
+  cashflow?: CashflowResult | null
+  roi?: ROIResult | null
+  location_risk?: LocationRiskResult | null
+  tax_depreciation?: TaxDepreciationResult | null
+  investment_potential?: InvestmentPotentialResult | null
+  negotiation?: NegotiationResult | null
+  selected_analyses?: string[] | null
   generated_at: string
   tokens_used: number
 }
+
+// Canonical analysis identifiers — must match backend ANALYSIS_IDS.
+export type AnalysisId =
+  | 'rental_yield'
+  | 'cashflow'
+  | 'roi'
+  | 'location_risk'
+  | 'tax_depreciation'
+  | 'investment_potential'
+  | 'negotiation'
+
+export const ALL_ANALYSES: AnalysisId[] = [
+  'rental_yield',
+  'cashflow',
+  'roi',
+  'location_risk',
+  'tax_depreciation',
+  'investment_potential',
+  'negotiation',
+]
 
 export type StreamEvent =
   | { event: 'rental_yield'; data: RentalYieldResult }

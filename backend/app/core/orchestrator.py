@@ -10,9 +10,34 @@ from app.agents.negotiation_agent import NegotiationAgent
 from app.agents.rental_yield_agent import RentalYieldAgent
 from app.agents.roi_agent import ROIAgent
 from app.agents.tax_depreciation_agent import TaxDepreciationAgent
-from app.schemas.property import PropertyInput, PropertyReport
+from app.schemas.property import ANALYSIS_IDS, PropertyInput, PropertyReport
 
 logger = structlog.get_logger(__name__)
+
+# Dependency map: synthesising agents that need other agents' output.
+# Keyed by the dependent agent → set of prerequisites that must also run.
+ANALYSIS_DEPENDENCIES: dict[str, set[str]] = {
+    "investment_potential": {"rental_yield", "cashflow", "roi", "location_risk"},
+    "negotiation": {"cashflow", "roi", "location_risk"},
+}
+
+# Agents that run independently in the parallel batch (no dependencies on other agents).
+PARALLEL_AGENTS = {"rental_yield", "cashflow", "roi", "location_risk", "tax_depreciation"}
+SYNTHESIS_AGENTS = {"investment_potential", "negotiation"}
+
+
+def _resolve_selection(selected: list[str] | None) -> set[str]:
+    """Expand the user's selection to include required dependencies.
+
+    None or empty → run everything (backward compatible).
+    Otherwise → the listed agents plus any prerequisites.
+    """
+    if not selected:
+        return set(ANALYSIS_IDS)
+    resolved = {s for s in selected if s in ANALYSIS_IDS}
+    for agent_id in list(resolved):
+        resolved.update(ANALYSIS_DEPENDENCIES.get(agent_id, set()))
+    return resolved
 
 
 class PropertyAnalysisOrchestrator:
@@ -25,66 +50,91 @@ class PropertyAnalysisOrchestrator:
         self.investment_potential_agent = InvestmentPotentialAgent()
         self.negotiation_agent = NegotiationAgent()
 
-    async def analyze(self, prop: PropertyInput) -> PropertyReport:
-        logger.info("orchestrator.analyze.start", address=prop.address)
+    def _agent_coro(self, name: str, prop: PropertyInput, ctx: dict | None = None):
+        """Return the coroutine for a given analysis name."""
+        if name == "rental_yield":
+            return self.rental_yield_agent.run(prop)
+        if name == "cashflow":
+            return self.cashflow_agent.run(prop)
+        if name == "roi":
+            return self.roi_agent.run(prop)
+        if name == "location_risk":
+            return self.location_risk_agent.run(prop)
+        if name == "tax_depreciation":
+            return self.tax_depreciation_agent.run(prop)
+        if name == "investment_potential":
+            return self.investment_potential_agent.run(
+                prop, ctx["rental_yield"], ctx["cashflow"], ctx["roi"], ctx["location_risk"]
+            )
+        if name == "negotiation":
+            return self.negotiation_agent.run(
+                prop, ctx["cashflow"], ctx["roi"], ctx["location_risk"]
+            )
+        raise ValueError(f"unknown agent: {name}")
 
-        (
-            (rental_yield, ry_tokens),
-            (cashflow, cf_tokens),
-            (roi, roi_tokens),
-            (location_risk, lr_tokens),
-            (tax_depreciation, td_tokens),
-        ) = await asyncio.gather(
-            self.rental_yield_agent.run(prop),
-            self.cashflow_agent.run(prop),
-            self.roi_agent.run(prop),
-            self.location_risk_agent.run(prop),
-            self.tax_depreciation_agent.run(prop),
-        )
+    async def analyze(
+        self, prop: PropertyInput, selected: list[str] | None = None
+    ) -> PropertyReport:
+        resolved = _resolve_selection(selected)
+        logger.info("orchestrator.analyze.start", address=prop.address, selected=sorted(resolved))
 
-        logger.info("orchestrator.parallel_done")
-        (investment_potential, ip_tokens), (negotiation, ng_tokens) = await asyncio.gather(
-            self.investment_potential_agent.run(prop, rental_yield, cashflow, roi, location_risk),
-            self.negotiation_agent.run(prop, cashflow, roi, location_risk),
-        )
+        parallel = [a for a in PARALLEL_AGENTS if a in resolved]
+        synthesis = [a for a in SYNTHESIS_AGENTS if a in resolved]
 
-        total_tokens = ry_tokens + cf_tokens + roi_tokens + lr_tokens + td_tokens + ip_tokens + ng_tokens
-        logger.info("orchestrator.analyze.done", total_tokens=total_tokens)
+        results: dict = {}
+        tokens_total = 0
+
+        if parallel:
+            outputs = await asyncio.gather(*(self._agent_coro(n, prop) for n in parallel))
+            for name, (result, tokens) in zip(parallel, outputs):
+                results[name] = result
+                tokens_total += tokens
+
+        if synthesis:
+            outputs = await asyncio.gather(
+                *(self._agent_coro(n, prop, results) for n in synthesis)
+            )
+            for name, (result, tokens) in zip(synthesis, outputs):
+                results[name] = result
+                tokens_total += tokens
+
+        logger.info("orchestrator.analyze.done", total_tokens=tokens_total)
 
         return PropertyReport(
             property=prop,
-            rental_yield=rental_yield,
-            cashflow=cashflow,
-            roi=roi,
-            location_risk=location_risk,
-            tax_depreciation=tax_depreciation,
-            investment_potential=investment_potential,
-            negotiation=negotiation,
-            tokens_used=total_tokens,
+            rental_yield=results.get("rental_yield"),
+            cashflow=results.get("cashflow"),
+            roi=results.get("roi"),
+            location_risk=results.get("location_risk"),
+            tax_depreciation=results.get("tax_depreciation"),
+            investment_potential=results.get("investment_potential"),
+            negotiation=results.get("negotiation"),
+            selected_analyses=sorted(resolved),
+            tokens_used=tokens_total,
         )
 
-    async def analyze_stream(self, prop: PropertyInput) -> AsyncGenerator[dict, None]:
+    async def analyze_stream(
+        self, prop: PropertyInput, selected: list[str] | None = None
+    ) -> AsyncGenerator[dict, None]:
         """Yield partial results as each agent completes."""
-        logger.info("orchestrator.stream.start", address=prop.address)
-        queue: asyncio.Queue[tuple[str, object] | None] = asyncio.Queue()
+        resolved = _resolve_selection(selected)
+        logger.info("orchestrator.stream.start", address=prop.address, selected=sorted(resolved))
 
-        async def run_agent(name: str, coro):
-            result, tokens = await coro
+        parallel = [a for a in PARALLEL_AGENTS if a in resolved]
+        synthesis = [a for a in SYNTHESIS_AGENTS if a in resolved]
+
+        queue: asyncio.Queue[tuple[str, object, int] | None] = asyncio.Queue()
+
+        async def run_agent(name: str):
+            result, tokens = await self._agent_coro(name, prop)
             await queue.put((name, result, tokens))
 
-        tasks = [
-            asyncio.create_task(run_agent("rental_yield", self.rental_yield_agent.run(prop))),
-            asyncio.create_task(run_agent("cashflow", self.cashflow_agent.run(prop))),
-            asyncio.create_task(run_agent("roi", self.roi_agent.run(prop))),
-            asyncio.create_task(run_agent("location_risk", self.location_risk_agent.run(prop))),
-            asyncio.create_task(run_agent("tax_depreciation", self.tax_depreciation_agent.run(prop))),
-        ]
+        tasks = [asyncio.create_task(run_agent(name)) for name in parallel]
+        done_signal = asyncio.create_task(_signal_done(tasks, queue))
 
         results: dict = {}
         tokens_total = 0
         remaining = len(tasks)
-
-        done_signal = asyncio.create_task(_signal_done(tasks, queue))
 
         while remaining > 0:
             item = await queue.get()
@@ -98,34 +148,26 @@ class PropertyAnalysisOrchestrator:
 
         done_signal.cancel()
 
-        (investment_potential, ip_tokens), (negotiation, ng_tokens) = await asyncio.gather(
-            self.investment_potential_agent.run(
-                prop,
-                results["rental_yield"],
-                results["cashflow"],
-                results["roi"],
-                results["location_risk"],
-            ),
-            self.negotiation_agent.run(
-                prop,
-                results["cashflow"],
-                results["roi"],
-                results["location_risk"],
-            ),
-        )
-        tokens_total += ip_tokens + ng_tokens
-        yield {"event": "investment_potential", "data": investment_potential.model_dump()}
-        yield {"event": "negotiation", "data": negotiation.model_dump()}
+        # Synthesis agents — run in parallel after their dependencies are ready.
+        if synthesis:
+            outputs = await asyncio.gather(
+                *(self._agent_coro(n, prop, results) for n in synthesis)
+            )
+            for name, (result, tokens) in zip(synthesis, outputs):
+                results[name] = result
+                tokens_total += tokens
+                yield {"event": name, "data": result.model_dump()}
 
         report = PropertyReport(
             property=prop,
-            rental_yield=results["rental_yield"],
-            cashflow=results["cashflow"],
-            roi=results["roi"],
-            location_risk=results["location_risk"],
-            tax_depreciation=results["tax_depreciation"],
-            investment_potential=investment_potential,
-            negotiation=negotiation,
+            rental_yield=results.get("rental_yield"),
+            cashflow=results.get("cashflow"),
+            roi=results.get("roi"),
+            location_risk=results.get("location_risk"),
+            tax_depreciation=results.get("tax_depreciation"),
+            investment_potential=results.get("investment_potential"),
+            negotiation=results.get("negotiation"),
+            selected_analyses=sorted(resolved),
             tokens_used=tokens_total,
         )
         yield {"event": "complete", "data": report.model_dump()}

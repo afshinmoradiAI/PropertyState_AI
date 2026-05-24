@@ -1,0 +1,47 @@
+{
+  "//": "AWS App Runner service config for the Next.js frontend.",
+  "//1": "Deploy with: aws apprunner create-service --cli-input-json file://deploy/aws/apprunner-frontend.json --region us-east-1",
+  "//2": "IMPORTANT: NEXT_PUBLIC_API_URL is baked into the build, so it must be set as a docker build arg",
+  "//3": "BEFORE you push the image to ECR. After the backend App Runner service is created and you have",
+  "//4": "its public URL, rebuild the frontend image with that URL and push to ECR again.",
+  "//5": "",
+  "//6": "Example build + push:",
+  "//7": "  docker build --build-arg NEXT_PUBLIC_API_URL=https://BACKEND_URL.awsapprunner.com \\",
+  "//8": "    -t ACCOUNT.dkr.ecr.REGION.amazonaws.com/propertystate-frontend:latest ./frontend",
+  "//9": "  docker push ACCOUNT.dkr.ecr.REGION.amazonaws.com/propertystate-frontend:latest",
+  "//10": "Replace ACCOUNT and REGION below.",
+
+  "ServiceName": "propertystate-frontend",
+  "SourceConfiguration": {
+    "AuthenticationConfiguration": {
+      "AccessRoleArn": "arn:aws:iam::ACCOUNT:role/AppRunnerECRAccessRole"
+    },
+    "AutoDeploymentsEnabled": true,
+    "ImageRepository": {
+      "ImageIdentifier": "ACCOUNT.dkr.ecr.REGION.amazonaws.com/propertystate-frontend:latest",
+      "ImageRepositoryType": "ECR",
+      "ImageConfiguration": {
+        "Port": "3000",
+        "RuntimeEnvironmentVariables": {
+          "NODE_ENV": "production"
+        }
+      }
+    }
+  },
+  "InstanceConfiguration": {
+    "Cpu": "0.25 vCPU",
+    "Memory": "0.5 GB"
+  },
+  "HealthCheckConfiguration": {
+    "Protocol": "HTTP",
+    "Path": "/",
+    "Interval": 20,
+    "Timeout": 10,
+    "HealthyThreshold": 1,
+    "UnhealthyThreshold": 3
+  },
+  "Tags": [
+    { "Key": "Project", "Value": "PropertyState" },
+    { "Key": "Component", "Value": "frontend" }
+  ]
+}

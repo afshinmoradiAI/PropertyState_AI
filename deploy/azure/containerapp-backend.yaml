@@ -1,0 +1,116 @@
+# Azure Container App — FastAPI backend
+#
+# Deploy with:
+#   az containerapp create \
+#     --resource-group propertystate-rg \
+#     --name propertystate-backend \
+#     --environment propertystate-env \
+#     --yaml deploy/azure/containerapp-backend.yaml
+#
+# Prerequisites:
+#   1. Create resource group + Container Apps environment:
+#        az group create --name propertystate-rg --location eastus
+#        az containerapp env create --name propertystate-env \
+#          --resource-group propertystate-rg --location eastus
+#   2. Create Azure Container Registry and push image:
+#        az acr create --resource-group propertystate-rg --name propertystateacr --sku Basic
+#        az acr login --name propertystateacr
+#        docker build -t propertystateacr.azurecr.io/propertystate-backend:latest ./backend
+#        docker push propertystateacr.azurecr.io/propertystate-backend:latest
+#   3. Store secrets in Key Vault (or use --secrets flags inline). Reference below uses
+#      Container Apps' built-in secrets store for simplicity.
+#   4. For persistent SQLite, attach an Azure Files volume mount (see `volumeMounts` block
+#      and Azure docs: https://learn.microsoft.com/azure/container-apps/storage-mounts).
+#      Otherwise the SQLite DB is lost on container restart.
+#
+# Replace ACR_NAME, REGISTRY_PASSWORD, and FRONTEND_URL placeholders.
+
+location: eastus
+identity:
+  type: SystemAssigned
+properties:
+  managedEnvironmentId: /subscriptions/SUB_ID/resourceGroups/propertystate-rg/providers/Microsoft.App/managedEnvironments/propertystate-env
+  configuration:
+    activeRevisionsMode: Single
+    ingress:
+      external: true
+      targetPort: 8000
+      transport: auto
+      allowInsecure: false
+      traffic:
+        - latestRevision: true
+          weight: 100
+    registries:
+      - server: ACR_NAME.azurecr.io
+        username: ACR_NAME
+        passwordSecretRef: registry-password
+    secrets:
+      - name: registry-password
+        value: REGISTRY_PASSWORD
+      - name: anthropic-api-key
+        value: sk-ant-replace-me
+      - name: jwt-secret
+        value: replace-with-openssl-rand-hex-32
+  template:
+    containers:
+      - name: backend
+        image: ACR_NAME.azurecr.io/propertystate-backend:latest
+        resources:
+          cpu: 0.5
+          memory: 1Gi
+        env:
+          - name: ENV
+            value: production
+          - name: LOG_LEVEL
+            value: INFO
+          - name: DEFAULT_MODEL
+            value: claude-sonnet-4-6
+          - name: MAX_TOKENS
+            value: "2048"
+          - name: DATA_DIR
+            value: /app/data
+          - name: RATE_LIMIT_PER_MINUTE
+            value: "20"
+          - name: JWT_ALGORITHM
+            value: HS256
+          - name: JWT_EXPIRE_MINUTES
+            value: "10080"
+          - name: EMAIL_PROVIDER
+            value: console
+          - name: ALLOWED_ORIGINS
+            value: https://FRONTEND_URL
+          - name: FRONTEND_URL
+            value: https://FRONTEND_URL
+          - name: ANTHROPIC_API_KEY
+            secretRef: anthropic-api-key
+          - name: JWT_SECRET
+            secretRef: jwt-secret
+        probes:
+          - type: Liveness
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          - type: Readiness
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+        # Uncomment to mount an Azure Files share for persistent SQLite:
+        # volumeMounts:
+        #   - volumeName: sqlitedata
+        #     mountPath: /app/data
+    # volumes:
+    #   - name: sqlitedata
+    #     storageType: AzureFile
+    #     storageName: propertystate-files          # configured on the Container Apps env
+    scale:
+      minReplicas: 1
+      maxReplicas: 3
+      rules:
+        - name: http-rule
+          http:
+            metadata:
+              concurrentRequests: "50"

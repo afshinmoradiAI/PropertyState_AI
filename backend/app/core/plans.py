@@ -21,12 +21,21 @@ SONNET = "claude-sonnet-4-6"
 OPUS = "claude-opus-4-7"
 
 
+# Tier sizing mirrors CorpusAI's plan structure for consistency across products.
+# Worst-case API cost uses 3:1 input:output blended rate:
+#   Sonnet blended: (3×$3 + 1×$15)/4 = $6/M
+#   Opus   blended: (3×$15 + 1×$75)/4 = $30/M
+#
+# Free       ($0):   500k tokens,   5 gens, Haiku only             → ~$0.04 worst case (loss leader)
+# Pro        ($19):  1.5M tokens,  50 gens, Haiku+Sonnet           → $9 worst case at Sonnet (~$10 margin)
+# Lab        ($49):  5M  tokens, 150 gens, Haiku+Sonnet+Opus       → $150 worst case at Opus (Opus eats margin)
+# Enterprise ($200): 5M  tokens, 500 gens, all 3 models            → $150 worst case at Opus (~$50 margin)
 PLANS: dict[str, Plan] = {
     "free": Plan(
         id="free",
         label="Free",
         price_aud=0,
-        tokens_per_month=200_000,
+        tokens_per_month=500_000,
         generations_per_month=5,
         allowed_models=(HAIKU,),
         default_model=HAIKU,
@@ -37,34 +46,34 @@ PLANS: dict[str, Plan] = {
         id="pro",
         label="Pro",
         price_aud=19,
-        tokens_per_month=2_000_000,
+        tokens_per_month=1_500_000,
         generations_per_month=50,
         allowed_models=(HAIKU, SONNET),
         default_model=SONNET,
         available=False,  # Stripe not wired yet
-        description="Sonnet + Haiku. 50 analyses / month.",
+        description="Sonnet + Haiku. 50 analyses / month — the sweet spot for active investors.",
     ),
     "lab": Plan(
         id="lab",
         label="Lab",
         price_aud=49,
-        tokens_per_month=8_000_000,
-        generations_per_month=200,
+        tokens_per_month=5_000_000,
+        generations_per_month=150,
         allowed_models=(HAIKU, SONNET, OPUS),
         default_model=SONNET,
         available=False,
-        description="All models incl. Opus. 200 analyses / month.",
+        description="All models incl. Opus. 150 analyses / month. Deepest analysis tier.",
     ),
     "enterprise": Plan(
         id="enterprise",
         label="Enterprise",
         price_aud=200,
-        tokens_per_month=50_000_000,
-        generations_per_month=2000,
+        tokens_per_month=5_000_000,
+        generations_per_month=500,
         allowed_models=(HAIKU, SONNET, OPUS),
         default_model=OPUS,
         available=False,
-        description="High volume, all models, priority support.",
+        description="High volume for buyer's agents + firms. All models. Priority support.",
     ),
 }
 

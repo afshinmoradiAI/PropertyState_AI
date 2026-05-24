@@ -20,20 +20,20 @@ export default function MiniPropertyForm({ label, value, onChange, onRemove, dis
 
   const inputCls =
     'w-full rounded-lg border px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 transition-colors' +
-    ' border-amber-200 bg-amber-50/30 text-stone-800 placeholder-stone-400' +
-    ' focus:border-amber-600 focus:ring-amber-100 disabled:opacity-50'
-  const labelCls = 'block text-[10px] font-semibold uppercase tracking-wide mb-1 text-amber-800'
+    ' border-blue-200 bg-blue-50/30 text-stone-800 placeholder-stone-400' +
+    ' focus:border-yellow-500 focus:ring-yellow-100 disabled:opacity-50'
+  const labelCls = 'block text-[10px] font-semibold uppercase tracking-wide mb-1 text-blue-900'
 
   return (
     <div className="rounded-2xl p-5 shadow-sm"
-      style={{ backgroundColor: '#fff', border: '1px solid #E8D5B7' }}>
+      style={{ backgroundColor: '#fff', border: '1px solid #C4D4F5' }}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black text-white"
-            style={{ background: 'linear-gradient(135deg, #6B3A1F, #C4956A)' }}>
+            style={{ background: 'linear-gradient(135deg, #1B3A6B, #D4AF37)' }}>
             {label}
           </div>
-          <h3 className="text-sm font-bold" style={{ color: '#2C1A0E' }}>Property {label}</h3>
+          <h3 className="text-sm font-bold" style={{ color: '#0D1F3C' }}>Property {label}</h3>
         </div>
         {onRemove && (
           <button
@@ -41,7 +41,7 @@ export default function MiniPropertyForm({ label, value, onChange, onRemove, dis
             onClick={onRemove}
             disabled={disabled}
             className="text-xs font-semibold transition-colors"
-            style={{ color: '#A07850' }}
+            style={{ color: '#4A7AC7' }}
             aria-label="Remove property"
           >
             Remove

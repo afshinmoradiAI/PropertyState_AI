@@ -66,35 +66,35 @@ function LibraryView() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F5EDE3' }}>
-      <header className="sticky top-0 z-50 border-b border-amber-900/40" style={{ backgroundColor: '#1A0F07' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#EEF2FF' }}>
+      <header className="sticky top-0 z-50 border-b border-blue-900/40" style={{ backgroundColor: '#0A1628' }}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black"
-              style={{ background: 'linear-gradient(135deg, #C4956A, #8B5E3C)' }}>
+              style={{ background: 'linear-gradient(135deg, #D4AF37, #2952A3)' }}>
               📚
             </div>
             <div>
               <h1 className="text-base font-bold text-amber-50">PropertyState AI</h1>
-              <p className="text-xs" style={{ color: '#C4956A' }}>Library</p>
+              <p className="text-xs" style={{ color: '#D4AF37' }}>Library</p>
             </div>
           </Link>
-          <Link href="/" className="text-sm font-semibold" style={{ color: '#C4956A' }}>← Home</Link>
+          <Link href="/" className="text-sm font-semibold" style={{ color: '#D4AF37' }}>← Home</Link>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-10">
         <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
           <div>
-            <h2 className="text-3xl font-black mb-1" style={{ color: '#2C1A0E' }}>Saved Reports</h2>
-            <p className="text-sm" style={{ color: '#8B5E3C' }}>
+            <h2 className="text-3xl font-black mb-1" style={{ color: '#0D1F3C' }}>Saved Reports</h2>
+            <p className="text-sm" style={{ color: '#2952A3' }}>
               {loading ? 'Loading…' : `${total} report${total === 1 ? '' : 's'} saved`}
             </p>
           </div>
           <Link
             href="/"
             className="rounded-xl px-4 py-2 text-sm font-bold text-white"
-            style={{ background: 'linear-gradient(135deg, #6B3A1F, #C4956A)' }}
+            style={{ background: 'linear-gradient(135deg, #1B3A6B, #D4AF37)' }}
           >
             + New Analysis
           </Link>
@@ -109,10 +109,10 @@ function LibraryView() {
 
         {!loading && reports.length === 0 && !error && (
           <div className="rounded-2xl p-12 text-center"
-            style={{ backgroundColor: '#fff', border: '1px solid #E8D5B7' }}>
+            style={{ backgroundColor: '#fff', border: '1px solid #C4D4F5' }}>
             <p className="text-5xl mb-4">📭</p>
-            <p className="text-base font-bold mb-1" style={{ color: '#2C1A0E' }}>No reports yet</p>
-            <p className="text-sm" style={{ color: '#8B5E3C' }}>Run an analysis on a property — it&apos;ll be saved here automatically.</p>
+            <p className="text-base font-bold mb-1" style={{ color: '#0D1F3C' }}>No reports yet</p>
+            <p className="text-sm" style={{ color: '#2952A3' }}>Run an analysis on a property — it&apos;ll be saved here automatically.</p>
           </div>
         )}
 
@@ -121,8 +121,8 @@ function LibraryView() {
             const vc = r.verdict ? VERDICT_COLORS[r.verdict] : null
             return (
               <div key={r.id} className="rounded-2xl shadow-sm overflow-hidden flex flex-col"
-                style={{ backgroundColor: '#fff', border: '1px solid #E8D5B7' }}>
-                <Link href={`/r/${r.id}`} className="block p-5 flex-1 hover:bg-amber-50/30 transition-colors">
+                style={{ backgroundColor: '#fff', border: '1px solid #C4D4F5' }}>
+                <Link href={`/r/${r.id}`} className="block p-5 flex-1 hover:bg-blue-50/30 transition-colors">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     {vc && (
                       <span className="text-xs font-black px-2.5 py-1 rounded-lg"
@@ -131,29 +131,29 @@ function LibraryView() {
                       </span>
                     )}
                     {r.overall_score !== null && (
-                      <span className="text-sm font-black" style={{ color: '#2C1A0E' }}>
-                        {r.overall_score}<span className="text-xs font-normal" style={{ color: '#A07850' }}>/10</span>
+                      <span className="text-sm font-black" style={{ color: '#0D1F3C' }}>
+                        {r.overall_score}<span className="text-xs font-normal" style={{ color: '#4A7AC7' }}>/10</span>
                       </span>
                     )}
                   </div>
-                  <div className="text-sm font-bold truncate mb-0.5" style={{ color: '#2C1A0E' }}>
+                  <div className="text-sm font-bold truncate mb-0.5" style={{ color: '#0D1F3C' }}>
                     {r.address}
                   </div>
-                  <div className="text-xs mb-3" style={{ color: '#8B5E3C' }}>
+                  <div className="text-xs mb-3" style={{ color: '#2952A3' }}>
                     {r.suburb}, {r.state} {r.postcode} · {r.property_type}
                   </div>
-                  <div className="text-sm font-bold" style={{ color: '#6B3A1F' }}>
+                  <div className="text-sm font-bold" style={{ color: '#1B3A6B' }}>
                     ${fmt(r.purchase_price)}
                   </div>
-                  <div className="text-[10px] mt-2" style={{ color: '#A07850' }}>
+                  <div className="text-[10px] mt-2" style={{ color: '#4A7AC7' }}>
                     {new Date(r.created_at + 'Z').toLocaleString('en-AU')} · {r.tokens_used.toLocaleString()} tokens
                   </div>
                 </Link>
-                <div className="flex border-t" style={{ borderColor: '#F5EDE3' }}>
+                <div className="flex border-t" style={{ borderColor: '#EEF2FF' }}>
                   <Link
                     href={`/r/${r.id}`}
                     className="flex-1 text-center py-2 text-xs font-semibold transition-colors"
-                    style={{ color: '#6B3A1F' }}
+                    style={{ color: '#1B3A6B' }}
                   >
                     Open
                   </Link>
@@ -180,7 +180,7 @@ function LibraryView() {
                       }
                     }}
                     className="flex-1 py-2 text-xs font-semibold transition-colors"
-                    style={{ color: '#6B3A1F', borderLeft: '1px solid #F5EDE3' }}
+                    style={{ color: '#1B3A6B', borderLeft: '1px solid #EEF2FF' }}
                   >
                     PDF
                   </button>
@@ -190,7 +190,7 @@ function LibraryView() {
                       navigator.clipboard.writeText(url).then(() => alert('Share link copied!'))
                     }}
                     className="flex-1 py-2 text-xs font-semibold transition-colors"
-                    style={{ color: '#6B3A1F', borderLeft: '1px solid #F5EDE3' }}
+                    style={{ color: '#1B3A6B', borderLeft: '1px solid #EEF2FF' }}
                   >
                     Copy Link
                   </button>
@@ -198,7 +198,7 @@ function LibraryView() {
                     onClick={() => handleDelete(r.id)}
                     disabled={deletingId === r.id}
                     className="flex-1 py-2 text-xs font-semibold transition-colors disabled:opacity-50"
-                    style={{ color: '#991B1B', borderLeft: '1px solid #F5EDE3' }}
+                    style={{ color: '#991B1B', borderLeft: '1px solid #EEF2FF' }}
                   >
                     {deletingId === r.id ? '…' : 'Delete'}
                   </button>
@@ -209,8 +209,8 @@ function LibraryView() {
         </div>
       </main>
 
-      <footer className="py-8 px-6 text-center" style={{ backgroundColor: '#1A0F07', borderTop: '1px solid rgba(196,149,106,0.2)' }}>
-        <p className="text-xs" style={{ color: '#6B3A1F' }}>
+      <footer className="py-8 px-6 text-center" style={{ backgroundColor: '#0A1628', borderTop: '1px solid rgba(212,175,55,0.2)' }}>
+        <p className="text-xs" style={{ color: '#1B3A6B' }}>
           © 2026 PropertyState AI · For informational purposes only. Not financial advice.
         </p>
       </footer>

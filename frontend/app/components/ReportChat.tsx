@@ -98,14 +98,14 @@ export default function ReportChat({ report }: Props) {
 
   return (
     <div className="rounded-2xl shadow-sm overflow-hidden"
-      style={{ backgroundColor: '#fff', border: '1px solid #E8D5B7' }}>
+      style={{ backgroundColor: '#fff', border: '1px solid #C4D4F5' }}>
       {/* Header */}
       <div className="px-5 py-4 flex items-center gap-2"
-        style={{ background: 'linear-gradient(135deg, #2C1A0E 0%, #6B3A1F 100%)' }}>
+        style={{ background: 'linear-gradient(135deg, #0D1F3C 0%, #1B3A6B 100%)' }}>
         <span className="text-xl">💬</span>
         <div>
-          <h3 className="text-base font-bold" style={{ color: '#FFF8F0' }}>Ask About This Report</h3>
-          <p className="text-xs" style={{ color: '#C4956A' }}>
+          <h3 className="text-base font-bold" style={{ color: '#F0F5FF' }}>Ask About This Report</h3>
+          <p className="text-xs" style={{ color: '#D4AF37' }}>
             Conversational follow-up powered by Claude · Report is in context
           </p>
         </div>
@@ -115,14 +115,14 @@ export default function ReportChat({ report }: Props) {
       <div ref={scrollRef} className="overflow-y-auto px-5 py-4 space-y-3" style={{ maxHeight: 460, minHeight: 220 }}>
         {messages.length === 0 && !streaming && (
           <div className="text-center py-6">
-            <p className="text-sm font-semibold mb-3" style={{ color: '#6B3A1F' }}>Try one of these questions:</p>
+            <p className="text-sm font-semibold mb-3" style={{ color: '#1B3A6B' }}>Try one of these questions:</p>
             <div className="flex flex-wrap gap-2 justify-center">
               {SUGGESTED_QUESTIONS.map((q) => (
                 <button
                   key={q}
                   onClick={() => send(q)}
                   className="text-xs font-semibold px-3 py-1.5 rounded-full transition-all hover:scale-105"
-                  style={{ backgroundColor: '#F5EDE3', color: '#6B3A1F', border: '1px solid #E8D5B7' }}
+                  style={{ backgroundColor: '#EEF2FF', color: '#1B3A6B', border: '1px solid #C4D4F5' }}
                 >
                   {q}
                 </button>
@@ -137,14 +137,14 @@ export default function ReportChat({ report }: Props) {
               className="max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap"
               style={
                 m.role === 'user'
-                  ? { background: 'linear-gradient(135deg, #6B3A1F, #C4956A)', color: '#fff' }
-                  : { backgroundColor: '#F5EDE3', color: '#2C1A0E', border: '1px solid #E8D5B7' }
+                  ? { background: 'linear-gradient(135deg, #1B3A6B, #D4AF37)', color: '#fff' }
+                  : { backgroundColor: '#EEF2FF', color: '#0D1F3C', border: '1px solid #C4D4F5' }
               }
             >
               {m.content}
               {m.role === 'assistant' && streaming && i === messages.length - 1 && (
                 <span className="inline-block w-1.5 h-3.5 ml-1 align-text-bottom animate-pulse"
-                  style={{ backgroundColor: '#8B5E3C' }} />
+                  style={{ backgroundColor: '#2952A3' }} />
               )}
             </div>
           </div>
@@ -159,7 +159,7 @@ export default function ReportChat({ report }: Props) {
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className="px-4 py-3 flex gap-2" style={{ borderTop: '1px solid #F5EDE3' }}>
+      <form onSubmit={handleSubmit} className="px-4 py-3 flex gap-2" style={{ borderTop: '1px solid #EEF2FF' }}>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -167,16 +167,16 @@ export default function ReportChat({ report }: Props) {
           placeholder="Ask a follow-up question…"
           className="flex-1 rounded-xl border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-colors"
           style={{
-            borderColor: '#E8D5B7',
-            backgroundColor: '#FFF8F0',
-            color: '#2C1A0E',
+            borderColor: '#C4D4F5',
+            backgroundColor: '#F0F5FF',
+            color: '#0D1F3C',
           }}
         />
         <button
           type="submit"
           disabled={streaming || !input.trim()}
           className="rounded-xl px-5 text-sm font-bold text-white transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{ background: 'linear-gradient(135deg, #6B3A1F, #C4956A)' }}
+          style={{ background: 'linear-gradient(135deg, #1B3A6B, #D4AF37)' }}
         >
           {streaming ? '…' : 'Send'}
         </button>

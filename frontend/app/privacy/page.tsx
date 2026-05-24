@@ -4,16 +4,16 @@ export const metadata = { title: 'Privacy Policy — PropertyState AI' }
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F5EDE3' }}>
-      <header className="border-b" style={{ backgroundColor: '#1A0F07', borderColor: 'rgba(196,149,106,0.4)' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#EEF2FF' }}>
+      <header className="border-b" style={{ backgroundColor: '#0A1628', borderColor: 'rgba(212,175,55,0.4)' }}>
         <div className="max-w-3xl mx-auto px-6 py-4">
-          <Link href="/" className="text-sm font-semibold" style={{ color: '#C4956A' }}>← PropertyState AI</Link>
+          <Link href="/" className="text-sm font-semibold" style={{ color: '#D4AF37' }}>← PropertyState AI</Link>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-6 py-12 prose-styled" style={{ color: '#2C1A0E' }}>
+      <main className="max-w-3xl mx-auto px-6 py-12 prose-styled" style={{ color: '#0D1F3C' }}>
         <h1 className="text-3xl font-black mb-2">Privacy Policy</h1>
-        <p className="text-sm mb-8" style={{ color: '#8B5E3C' }}>Last updated: 2026-05-23</p>
+        <p className="text-sm mb-8" style={{ color: '#2952A3' }}>Last updated: 2026-05-23</p>
 
         <p className="mb-4">
           PropertyState AI (&quot;we&quot;, &quot;us&quot;) takes your privacy seriously. This policy explains what we collect,
@@ -47,7 +47,7 @@ export default function PrivacyPage() {
 
         <Section title="4. Your rights">
           <ul>
-            <li><strong>Access</strong> — download all your data as JSON from <Link href="/account" className="underline" style={{ color: '#6B3A1F' }}>your account page</Link>.</li>
+            <li><strong>Access</strong> — download all your data as JSON from <Link href="/account" className="underline" style={{ color: '#1B3A6B' }}>your account page</Link>.</li>
             <li><strong>Deletion</strong> — delete your account and all associated data at any time.</li>
             <li><strong>Rectification</strong> — sign in and update your details.</li>
           </ul>
@@ -72,8 +72,8 @@ export default function PrivacyPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-8">
-      <h2 className="text-lg font-bold mb-2" style={{ color: '#2C1A0E' }}>{title}</h2>
-      <div style={{ color: '#4A2C0A' }}>{children}</div>
+      <h2 className="text-lg font-bold mb-2" style={{ color: '#0D1F3C' }}>{title}</h2>
+      <div style={{ color: '#0D1F3C' }}>{children}</div>
     </div>
   )
 }

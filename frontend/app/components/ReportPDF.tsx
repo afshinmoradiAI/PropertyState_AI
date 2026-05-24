@@ -3,13 +3,13 @@ import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 import { PropertyReport } from '../types/property'
 
 const COLORS = {
-  brand: '#6B3A1F',
-  brandDark: '#2C1A0E',
-  brandLight: '#C4956A',
-  cream: '#F5EDE3',
-  ink: '#1A0F07',
-  muted: '#8B5E3C',
-  border: '#E8D5B7',
+  brand: '#1B3A6B',
+  brandDark: '#0D1F3C',
+  brandLight: '#D4AF37',
+  cream: '#EEF2FF',
+  ink: '#0A1628',
+  muted: '#2952A3',
+  border: '#C4D4F5',
   good: '#065F46',
   bad: '#991B1B',
   warn: '#92400E',
@@ -75,66 +75,74 @@ export default function ReportPDF({ report }: Props) {
         </View>
 
         {/* Verdict */}
-        <View style={styles.verdictBox}>
-          <View style={styles.flexRow}>
-            <View>
-              <Text style={[styles.priceLabel, { marginBottom: 4 }]}>Investment Verdict</Text>
-              <Text style={styles.verdictBadge}>{ip.verdict}</Text>
-              <Text style={[styles.subtitle, { marginTop: 6 }]}>Confidence: {ip.confidence}</Text>
+        {ip && (
+          <>
+            <View style={styles.verdictBox}>
+              <View style={styles.flexRow}>
+                <View>
+                  <Text style={[styles.priceLabel, { marginBottom: 4 }]}>Investment Verdict</Text>
+                  <Text style={styles.verdictBadge}>{ip.verdict}</Text>
+                  <Text style={[styles.subtitle, { marginTop: 6 }]}>Confidence: {ip.confidence}</Text>
+                </View>
+                <View>
+                  <Text style={[styles.priceLabel, { textAlign: 'right' }]}>Score</Text>
+                  <Text style={styles.verdictScore}>{ip.overall_score}/10</Text>
+                </View>
+              </View>
+              <Text style={[styles.commentary, { color: COLORS.ink, fontStyle: 'normal', marginTop: 10 }]}>{ip.recommendation}</Text>
             </View>
-            <View>
-              <Text style={[styles.priceLabel, { textAlign: 'right' }]}>Score</Text>
-              <Text style={styles.verdictScore}>{ip.overall_score}/10</Text>
-            </View>
-          </View>
-          <Text style={[styles.commentary, { color: COLORS.ink, fontStyle: 'normal', marginTop: 10 }]}>{ip.recommendation}</Text>
-        </View>
 
-        {/* Strengths & Risks */}
-        <View style={styles.twoCol}>
-          <View style={[styles.card, styles.half]}>
-            <Text style={[styles.sectionTitle, { color: COLORS.good }]}>Strengths</Text>
-            {ip.key_strengths.map((s, i) => (<Text key={i} style={styles.bullet}>+ {s}</Text>))}
-          </View>
-          <View style={[styles.card, styles.half]}>
-            <Text style={[styles.sectionTitle, { color: COLORS.bad }]}>Risks</Text>
-            {ip.key_risks.map((r, i) => (<Text key={i} style={styles.bullet}>! {r}</Text>))}
-          </View>
-        </View>
+            {/* Strengths & Risks */}
+            <View style={styles.twoCol}>
+              <View style={[styles.card, styles.half]}>
+                <Text style={[styles.sectionTitle, { color: COLORS.good }]}>Strengths</Text>
+                {ip.key_strengths.map((s, i) => (<Text key={i} style={styles.bullet}>+ {s}</Text>))}
+              </View>
+              <View style={[styles.card, styles.half]}>
+                <Text style={[styles.sectionTitle, { color: COLORS.bad }]}>Risks</Text>
+                {ip.key_risks.map((r, i) => (<Text key={i} style={styles.bullet}>! {r}</Text>))}
+              </View>
+            </View>
+          </>
+        )}
 
         {/* Negotiation */}
-        <Text style={styles.sectionTitle}>Negotiation Strategy</Text>
-        <View style={styles.card}>
-          <View style={{ flexDirection: 'row', marginBottom: 8 }}>
-            <View style={styles.priceBlock}>
-              <Text style={styles.priceLabel}>Asking</Text>
-              <Text style={styles.priceValue}>{aud(ng.asking_price)}</Text>
+        {ng && (
+          <>
+            <Text style={styles.sectionTitle}>Negotiation Strategy</Text>
+            <View style={styles.card}>
+              <View style={{ flexDirection: 'row', marginBottom: 8 }}>
+                <View style={styles.priceBlock}>
+                  <Text style={styles.priceLabel}>Asking</Text>
+                  <Text style={styles.priceValue}>{aud(ng.asking_price)}</Text>
+                </View>
+                <View style={styles.priceBlock}>
+                  <Text style={styles.priceLabel}>Opening offer</Text>
+                  <Text style={styles.priceValue}>{aud(ng.suggested_opening_offer)}</Text>
+                  <Text style={styles.priceHint}>Start here</Text>
+                </View>
+                <View style={styles.priceBlock}>
+                  <Text style={styles.priceLabel}>Max offer</Text>
+                  <Text style={styles.priceValue}>{aud(ng.recommended_max_offer)}</Text>
+                  <Text style={styles.priceHint}>Fair value</Text>
+                </View>
+                <View style={[styles.priceBlock, { backgroundColor: '#FEF3C7' }]}>
+                  <Text style={styles.priceLabel}>Walk away</Text>
+                  <Text style={[styles.priceValue, { color: COLORS.warn }]}>{aud(ng.walk_away_price)}</Text>
+                  <Text style={styles.priceHint}>Don&apos;t exceed</Text>
+                </View>
+              </View>
+              <Text style={{ fontSize: 9, color: COLORS.good, marginBottom: 6 }}>
+                Potential savings: up to {aud(ng.estimated_savings_potential)} below asking · Market: {ng.market_position.replace(/_/g, ' ')}
+              </Text>
+              <Text style={styles.priceLabel}>Levers</Text>
+              <View style={styles.pillRow}>
+                {ng.negotiation_levers.map((lv, i) => (<Text key={i} style={styles.pill}>{i + 1}. {lv}</Text>))}
+              </View>
+              <Text style={[styles.commentary, { color: COLORS.ink, fontStyle: 'normal' }]}>{ng.strategy}</Text>
             </View>
-            <View style={styles.priceBlock}>
-              <Text style={styles.priceLabel}>Opening offer</Text>
-              <Text style={styles.priceValue}>{aud(ng.suggested_opening_offer)}</Text>
-              <Text style={styles.priceHint}>Start here</Text>
-            </View>
-            <View style={styles.priceBlock}>
-              <Text style={styles.priceLabel}>Max offer</Text>
-              <Text style={styles.priceValue}>{aud(ng.recommended_max_offer)}</Text>
-              <Text style={styles.priceHint}>Fair value</Text>
-            </View>
-            <View style={[styles.priceBlock, { backgroundColor: '#FEF3C7' }]}>
-              <Text style={styles.priceLabel}>Walk away</Text>
-              <Text style={[styles.priceValue, { color: COLORS.warn }]}>{aud(ng.walk_away_price)}</Text>
-              <Text style={styles.priceHint}>Don&apos;t exceed</Text>
-            </View>
-          </View>
-          <Text style={{ fontSize: 9, color: COLORS.good, marginBottom: 6 }}>
-            Potential savings: up to {aud(ng.estimated_savings_potential)} below asking · Market: {ng.market_position.replace(/_/g, ' ')}
-          </Text>
-          <Text style={styles.priceLabel}>Levers</Text>
-          <View style={styles.pillRow}>
-            {ng.negotiation_levers.map((lv, i) => (<Text key={i} style={styles.pill}>{i + 1}. {lv}</Text>))}
-          </View>
-          <Text style={[styles.commentary, { color: COLORS.ink, fontStyle: 'normal' }]}>{ng.strategy}</Text>
-        </View>
+          </>
+        )}
       </Page>
 
       {/* Page 2 — Financials */}
@@ -144,41 +152,53 @@ export default function ReportPDF({ report }: Props) {
           <Text style={styles.title}>{p.address}</Text>
         </View>
 
-        <Text style={styles.sectionTitle}>Rental Yield</Text>
-        <View style={styles.card}>
-          <View style={styles.row}><Text style={styles.rowLabel}>Gross Yield</Text><Text style={styles.rowValue}>{pct(ry.gross_yield_pct)}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Net Yield</Text><Text style={styles.rowValue}>{pct(ry.net_yield_pct)}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Annual Rental Income</Text><Text style={styles.rowValue}>{aud(ry.annual_rental_income)}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Vacancy Rate</Text><Text style={styles.rowValue}>{pct(ry.estimated_vacancy_rate_pct)}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Market Rent</Text><Text style={styles.rowValue}>{ry.market_rent_assessment.replace(/_/g, ' ')}</Text></View>
-          <Text style={styles.commentary}>{ry.commentary}</Text>
-        </View>
+        {ry && (
+          <>
+            <Text style={styles.sectionTitle}>Rental Yield</Text>
+            <View style={styles.card}>
+              <View style={styles.row}><Text style={styles.rowLabel}>Gross Yield</Text><Text style={styles.rowValue}>{pct(ry.gross_yield_pct)}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Net Yield</Text><Text style={styles.rowValue}>{pct(ry.net_yield_pct)}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Annual Rental Income</Text><Text style={styles.rowValue}>{aud(ry.annual_rental_income)}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Vacancy Rate</Text><Text style={styles.rowValue}>{pct(ry.estimated_vacancy_rate_pct)}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Market Rent</Text><Text style={styles.rowValue}>{ry.market_rent_assessment.replace(/_/g, ' ')}</Text></View>
+              <Text style={styles.commentary}>{ry.commentary}</Text>
+            </View>
+          </>
+        )}
 
-        <Text style={styles.sectionTitle}>Cashflow</Text>
-        <View style={styles.card}>
-          <View style={styles.row}><Text style={styles.rowLabel}>Weekly Rent</Text><Text style={styles.rowValue}>{aud(cf.weekly_rental_income)}/wk</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Mortgage Payment</Text><Text style={styles.rowValue}>{aud(cf.weekly_mortgage_payment)}/wk</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Expenses</Text><Text style={styles.rowValue}>{aud(cf.weekly_expenses)}/wk</Text></View>
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>Net Cashflow</Text>
-            <Text style={[styles.rowValue, { color: cf.is_positive_cashflow ? COLORS.good : COLORS.bad }]}>
-              {cf.weekly_net_cashflow >= 0 ? '+' : '-'}{aud(cf.weekly_net_cashflow)}/wk
-            </Text>
-          </View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Annual Cashflow</Text><Text style={styles.rowValue}>{aud(cf.annual_net_cashflow)}/yr</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Break-even Rent</Text><Text style={styles.rowValue}>{aud(cf.break_even_rent)}/wk</Text></View>
-          <Text style={styles.commentary}>{cf.commentary}</Text>
-        </View>
+        {cf && (
+          <>
+            <Text style={styles.sectionTitle}>Cashflow</Text>
+            <View style={styles.card}>
+              <View style={styles.row}><Text style={styles.rowLabel}>Weekly Rent</Text><Text style={styles.rowValue}>{aud(cf.weekly_rental_income)}/wk</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Mortgage Payment</Text><Text style={styles.rowValue}>{aud(cf.weekly_mortgage_payment)}/wk</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Expenses</Text><Text style={styles.rowValue}>{aud(cf.weekly_expenses)}/wk</Text></View>
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>Net Cashflow</Text>
+                <Text style={[styles.rowValue, { color: cf.is_positive_cashflow ? COLORS.good : COLORS.bad }]}>
+                  {cf.weekly_net_cashflow >= 0 ? '+' : '-'}{aud(cf.weekly_net_cashflow)}/wk
+                </Text>
+              </View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Annual Cashflow</Text><Text style={styles.rowValue}>{aud(cf.annual_net_cashflow)}/yr</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Break-even Rent</Text><Text style={styles.rowValue}>{aud(cf.break_even_rent)}/wk</Text></View>
+              <Text style={styles.commentary}>{cf.commentary}</Text>
+            </View>
+          </>
+        )}
 
-        <Text style={styles.sectionTitle}>Return on Investment</Text>
-        <View style={styles.card}>
-          <View style={styles.row}><Text style={styles.rowLabel}>Capital Growth (pa)</Text><Text style={styles.rowValue}>{pct(roi.estimated_capital_growth_pct_pa)}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Total Return (pa)</Text><Text style={styles.rowValue}>{pct(roi.total_return_pct_pa)}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>5-Year Projected Value</Text><Text style={styles.rowValue}>{aud(roi.projected_value_5_years)}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Equity in 5 Years</Text><Text style={styles.rowValue}>{aud(roi.equity_in_5_years)}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Payback Period</Text><Text style={styles.rowValue}>{roi.payback_period_years ? `${roi.payback_period_years} yrs` : 'N/A'}</Text></View>
-          <Text style={styles.commentary}>{roi.commentary}</Text>
-        </View>
+        {roi && (
+          <>
+            <Text style={styles.sectionTitle}>Return on Investment</Text>
+            <View style={styles.card}>
+              <View style={styles.row}><Text style={styles.rowLabel}>Capital Growth (pa)</Text><Text style={styles.rowValue}>{pct(roi.estimated_capital_growth_pct_pa)}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Total Return (pa)</Text><Text style={styles.rowValue}>{pct(roi.total_return_pct_pa)}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>5-Year Projected Value</Text><Text style={styles.rowValue}>{aud(roi.projected_value_5_years)}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Equity in 5 Years</Text><Text style={styles.rowValue}>{aud(roi.equity_in_5_years)}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Payback Period</Text><Text style={styles.rowValue}>{roi.payback_period_years ? `${roi.payback_period_years} yrs` : 'N/A'}</Text></View>
+              <Text style={styles.commentary}>{roi.commentary}</Text>
+            </View>
+          </>
+        )}
 
         <Text style={styles.footer}>PropertyState AI · Page 2 · For informational purposes only — not financial advice.</Text>
       </Page>
@@ -190,37 +210,45 @@ export default function ReportPDF({ report }: Props) {
           <Text style={styles.title}>{p.address}</Text>
         </View>
 
-        <Text style={styles.sectionTitle}>Location &amp; Risk</Text>
-        <View style={styles.card}>
-          <View style={styles.row}><Text style={styles.rowLabel}>Suburb Score</Text><Text style={styles.rowValue}>{lr.suburb_score}/10</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Infrastructure</Text><Text style={styles.rowValue}>{lr.infrastructure_score}/10</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Flood Risk</Text><Text style={styles.rowValue}>{lr.flood_risk.toUpperCase()}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Crime Risk</Text><Text style={styles.rowValue}>{lr.crime_risk.toUpperCase()}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Vacancy Risk</Text><Text style={styles.rowValue}>{lr.vacancy_risk.toUpperCase()}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Demand/Supply</Text><Text style={styles.rowValue}>{lr.demand_supply_balance.replace(/_/g, ' ')}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Overall Risk</Text><Text style={styles.rowValue}>{lr.overall_risk_level.toUpperCase()}</Text></View>
-          <Text style={[styles.priceLabel, { marginTop: 8 }]}>Key Drivers</Text>
-          <View style={styles.bulletList}>
-            {lr.key_drivers.map((d, i) => (<Text key={i} style={styles.bullet}>• {d}</Text>))}
-          </View>
-          <Text style={styles.commentary}>{lr.commentary}</Text>
-        </View>
+        {lr && (
+          <>
+            <Text style={styles.sectionTitle}>Location &amp; Risk</Text>
+            <View style={styles.card}>
+              <View style={styles.row}><Text style={styles.rowLabel}>Suburb Score</Text><Text style={styles.rowValue}>{lr.suburb_score}/10</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Infrastructure</Text><Text style={styles.rowValue}>{lr.infrastructure_score}/10</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Flood Risk</Text><Text style={styles.rowValue}>{lr.flood_risk.toUpperCase()}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Crime Risk</Text><Text style={styles.rowValue}>{lr.crime_risk.toUpperCase()}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Vacancy Risk</Text><Text style={styles.rowValue}>{lr.vacancy_risk.toUpperCase()}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Demand/Supply</Text><Text style={styles.rowValue}>{lr.demand_supply_balance.replace(/_/g, ' ')}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Overall Risk</Text><Text style={styles.rowValue}>{lr.overall_risk_level.toUpperCase()}</Text></View>
+              <Text style={[styles.priceLabel, { marginTop: 8 }]}>Key Drivers</Text>
+              <View style={styles.bulletList}>
+                {lr.key_drivers.map((d, i) => (<Text key={i} style={styles.bullet}>• {d}</Text>))}
+              </View>
+              <Text style={styles.commentary}>{lr.commentary}</Text>
+            </View>
+          </>
+        )}
 
-        <Text style={styles.sectionTitle}>Tax &amp; Depreciation</Text>
-        <View style={styles.card}>
-          <View style={styles.row}><Text style={styles.rowLabel}>Marginal Tax Rate (assumed)</Text><Text style={styles.rowValue}>{pct(td.marginal_tax_rate_pct)}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Annual Depreciation</Text><Text style={styles.rowValue}>{aud(td.annual_depreciation_total)}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>  Div 40 (plant &amp; equipment)</Text><Text style={styles.rowValue}>{aud(td.division_40_depreciation)}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>  Div 43 (capital works)</Text><Text style={styles.rowValue}>{aud(td.division_43_depreciation)}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Annual Deductible Loss</Text><Text style={styles.rowValue}>{aud(td.annual_tax_deductible_loss)}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Est. Annual Tax Benefit</Text><Text style={styles.rowValue}>{aud(td.estimated_annual_tax_benefit)}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>After-Tax Weekly Cashflow</Text><Text style={styles.rowValue}>{td.after_tax_weekly_cashflow >= 0 ? '+' : '-'}{aud(td.after_tax_weekly_cashflow)}/wk</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Gearing</Text><Text style={styles.rowValue}>{td.is_negatively_geared ? 'Negatively geared' : 'Positively geared'}</Text></View>
-          <Text style={styles.commentary}>{td.commentary}</Text>
-          <Text style={[styles.commentary, { color: COLORS.muted }]}>
-            Estimates only — confirm with a quantity surveyor and accountant.
-          </Text>
-        </View>
+        {td && (
+          <>
+            <Text style={styles.sectionTitle}>Tax &amp; Depreciation</Text>
+            <View style={styles.card}>
+              <View style={styles.row}><Text style={styles.rowLabel}>Marginal Tax Rate (assumed)</Text><Text style={styles.rowValue}>{pct(td.marginal_tax_rate_pct)}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Annual Depreciation</Text><Text style={styles.rowValue}>{aud(td.annual_depreciation_total)}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>  Div 40 (plant &amp; equipment)</Text><Text style={styles.rowValue}>{aud(td.division_40_depreciation)}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>  Div 43 (capital works)</Text><Text style={styles.rowValue}>{aud(td.division_43_depreciation)}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Annual Deductible Loss</Text><Text style={styles.rowValue}>{aud(td.annual_tax_deductible_loss)}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Est. Annual Tax Benefit</Text><Text style={styles.rowValue}>{aud(td.estimated_annual_tax_benefit)}</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>After-Tax Weekly Cashflow</Text><Text style={styles.rowValue}>{td.after_tax_weekly_cashflow >= 0 ? '+' : '-'}{aud(td.after_tax_weekly_cashflow)}/wk</Text></View>
+              <View style={styles.row}><Text style={styles.rowLabel}>Gearing</Text><Text style={styles.rowValue}>{td.is_negatively_geared ? 'Negatively geared' : 'Positively geared'}</Text></View>
+              <Text style={styles.commentary}>{td.commentary}</Text>
+              <Text style={[styles.commentary, { color: COLORS.muted }]}>
+                Estimates only — confirm with a quantity surveyor and accountant.
+              </Text>
+            </View>
+          </>
+        )}
 
         <Text style={styles.sectionTitle}>Property &amp; Loan Inputs</Text>
         <View style={styles.card}>

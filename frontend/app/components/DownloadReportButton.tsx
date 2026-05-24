@@ -38,7 +38,7 @@ export default function DownloadReportButton({ report }: Props) {
       onClick={handleDownload}
       disabled={downloading}
       className="inline-flex items-center gap-2 rounded-xl py-2.5 px-4 text-sm font-bold text-white transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-      style={{ background: 'linear-gradient(135deg, #6B3A1F, #C4956A)' }}
+      style={{ background: 'linear-gradient(135deg, #1B3A6B, #D4AF37)' }}
     >
       {downloading ? (
         <>

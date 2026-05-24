@@ -45,15 +45,15 @@ function MetricRow({
   const values = reports.map(getter)
   const winner = pickWinner(values, mode)
   return (
-    <tr style={{ borderBottom: '1px solid #F5EDE3' }}>
-      <td className="py-2.5 px-3 text-sm" style={{ color: '#8B5E3C' }}>{label}</td>
+    <tr style={{ borderBottom: '1px solid #EEF2FF' }}>
+      <td className="py-2.5 px-3 text-sm" style={{ color: '#2952A3' }}>{label}</td>
       {reports.map((_, i) => {
         const v = values[i]
         const isWinner = winner === i
         return (
           <td key={i} className="py-2.5 px-3 text-sm text-right font-bold"
             style={{
-              color: v === undefined ? '#D4B896' : isWinner ? '#065F46' : '#2C1A0E',
+              color: v === undefined ? '#C8D8F0' : isWinner ? '#065F46' : '#0D1F3C',
               backgroundColor: isWinner ? 'rgba(16,185,129,0.08)' : 'transparent',
             }}>
             {v === undefined ? '…' : (
@@ -77,13 +77,13 @@ function StringRow({
   getter: (r: PartialReport) => string | undefined
 }) {
   return (
-    <tr style={{ borderBottom: '1px solid #F5EDE3' }}>
-      <td className="py-2.5 px-3 text-sm" style={{ color: '#8B5E3C' }}>{label}</td>
+    <tr style={{ borderBottom: '1px solid #EEF2FF' }}>
+      <td className="py-2.5 px-3 text-sm" style={{ color: '#2952A3' }}>{label}</td>
       {reports.map((r, i) => {
         const v = getter(r)
         return (
           <td key={i} className="py-2.5 px-3 text-sm text-right font-bold capitalize"
-            style={{ color: v === undefined ? '#D4B896' : '#2C1A0E' }}>
+            style={{ color: v === undefined ? '#C8D8F0' : '#0D1F3C' }}>
             {v === undefined ? '…' : v.replace(/_/g, ' ')}
           </td>
         )
@@ -96,7 +96,7 @@ function SectionHeader({ label, cols }: { label: string; cols: number }) {
   return (
     <tr>
       <td colSpan={cols + 1} className="py-2 px-3 text-xs font-bold uppercase tracking-wide"
-        style={{ color: '#fff', backgroundColor: '#6B3A1F' }}>
+        style={{ color: '#fff', backgroundColor: '#1B3A6B' }}>
         {label}
       </td>
     </tr>
@@ -121,25 +121,25 @@ export default function ComparisonResults({ reports, loading }: Props) {
             <div key={i} className="rounded-2xl p-5 relative"
               style={{
                 backgroundColor: '#fff',
-                border: isWinner ? '2px solid #C4956A' : '1px solid #E8D5B7',
-                boxShadow: isWinner ? '0 8px 20px rgba(107,58,31,0.15)' : 'none',
+                border: isWinner ? '2px solid #D4AF37' : '1px solid #C4D4F5',
+                boxShadow: isWinner ? '0 8px 20px rgba(27,58,107,0.15)' : 'none',
               }}>
               {isWinner && (
                 <div className="absolute -top-3 left-4 text-[10px] font-black px-2.5 py-1 rounded-full"
-                  style={{ background: 'linear-gradient(135deg, #6B3A1F, #C4956A)', color: '#fff' }}>
+                  style={{ background: 'linear-gradient(135deg, #1B3A6B, #D4AF37)', color: '#fff' }}>
                   🏆 BEST OVERALL
                 </div>
               )}
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black text-white"
-                  style={{ background: 'linear-gradient(135deg, #6B3A1F, #C4956A)' }}>
+                  style={{ background: 'linear-gradient(135deg, #1B3A6B, #D4AF37)' }}>
                   {String.fromCharCode(65 + i)}
                 </div>
-                <div className="text-xs font-bold uppercase" style={{ color: '#8B5E3C' }}>
+                <div className="text-xs font-bold uppercase" style={{ color: '#2952A3' }}>
                   {r.property.suburb}, {r.property.state}
                 </div>
               </div>
-              <div className="text-xs mb-3 truncate" style={{ color: '#A07850' }}>{r.property.address}</div>
+              <div className="text-xs mb-3 truncate" style={{ color: '#4A7AC7' }}>{r.property.address}</div>
 
               {ip ? (
                 <>
@@ -151,17 +151,17 @@ export default function ComparisonResults({ reports, loading }: Props) {
                       }}>
                       {ip.verdict}
                     </span>
-                    <span className="text-3xl font-black" style={{ color: '#2C1A0E' }}>
+                    <span className="text-3xl font-black" style={{ color: '#0D1F3C' }}>
                       {ip.overall_score}
-                      <span className="text-base font-normal" style={{ color: '#A07850' }}>/10</span>
+                      <span className="text-base font-normal" style={{ color: '#4A7AC7' }}>/10</span>
                     </span>
                   </div>
-                  <p className="text-xs" style={{ color: '#8B5E3C' }}>
-                    Confidence: <b style={{ color: '#2C1A0E' }}>{ip.confidence}</b>
+                  <p className="text-xs" style={{ color: '#2952A3' }}>
+                    Confidence: <b style={{ color: '#0D1F3C' }}>{ip.confidence}</b>
                   </p>
                 </>
               ) : (
-                <div className="h-16 animate-pulse rounded-lg" style={{ backgroundColor: '#F5EDE3' }} />
+                <div className="h-16 animate-pulse rounded-lg" style={{ backgroundColor: '#EEF2FF' }} />
               )}
             </div>
           )
@@ -170,15 +170,15 @@ export default function ComparisonResults({ reports, loading }: Props) {
 
       {/* Comparison table */}
       <div className="rounded-2xl overflow-hidden shadow-sm"
-        style={{ backgroundColor: '#fff', border: '1px solid #E8D5B7' }}>
+        style={{ backgroundColor: '#fff', border: '1px solid #C4D4F5' }}>
         <table className="w-full">
           <thead>
-            <tr style={{ backgroundColor: '#F5EDE3' }}>
+            <tr style={{ backgroundColor: '#EEF2FF' }}>
               <th className="py-3 px-3 text-left text-xs font-bold uppercase tracking-wide"
-                style={{ color: '#6B3A1F' }}>Metric</th>
+                style={{ color: '#1B3A6B' }}>Metric</th>
               {reports.map((r, i) => (
                 <th key={i} className="py-3 px-3 text-right text-xs font-bold uppercase tracking-wide"
-                  style={{ color: '#6B3A1F' }}>
+                  style={{ color: '#1B3A6B' }}>
                   {String.fromCharCode(65 + i)} · {r.property.suburb}
                 </th>
               ))}
@@ -224,7 +224,7 @@ export default function ComparisonResults({ reports, loading }: Props) {
       </div>
 
       {loading && (
-        <p className="mt-4 text-xs text-center animate-pulse" style={{ color: '#8B5E3C' }}>
+        <p className="mt-4 text-xs text-center animate-pulse" style={{ color: '#2952A3' }}>
           Streaming results from {cols} parallel analyses…
         </p>
       )}

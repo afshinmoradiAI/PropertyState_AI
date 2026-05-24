@@ -22,8 +22,8 @@ export default function AuthGuard({ children }: Props) {
 
   if (!ready) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F5EDE3' }}>
-        <p className="text-sm" style={{ color: '#8B5E3C' }}>Checking sign-in…</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#EEF2FF' }}>
+        <p className="text-sm" style={{ color: '#2952A3' }}>Checking sign-in…</p>
       </div>
     )
   }

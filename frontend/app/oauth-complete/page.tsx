@@ -28,8 +28,8 @@ export default function OAuthCompletePage() {
   }, [router])
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F5EDE3' }}>
-      <p className="text-sm" style={{ color: '#8B5E3C' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#EEF2FF' }}>
+      <p className="text-sm" style={{ color: '#2952A3' }}>
         {error ? `Error: ${error}` : 'Completing sign-in…'}
       </p>
     </div>

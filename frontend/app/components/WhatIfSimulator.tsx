@@ -52,17 +52,17 @@ export default function WhatIfSimulator({ baseProperty, onRecalculate, loading }
     <div className="rounded-2xl shadow-sm p-6"
       style={{
         background: 'linear-gradient(135deg, #fff 0%, #FAF3E8 100%)',
-        border: '1px solid #E8D5B7',
+        border: '1px solid #C4D4F5',
       }}>
       <div className="flex items-center gap-2 mb-2">
         <span className="text-xl">🎚️</span>
-        <h3 className="font-bold" style={{ color: '#2C1A0E' }}>What-if Simulator</h3>
+        <h3 className="font-bold" style={{ color: '#0D1F3C' }}>What-if Simulator</h3>
         <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-          style={{ backgroundColor: '#F5EDE3', color: '#8B5E3C' }}>
+          style={{ backgroundColor: '#EEF2FF', color: '#2952A3' }}>
           Tweak & re-run
         </span>
       </div>
-      <p className="text-xs mb-5" style={{ color: '#8B5E3C' }}>
+      <p className="text-xs mb-5" style={{ color: '#2952A3' }}>
         Move the sliders to see how the verdict changes with different numbers.
       </p>
 
@@ -82,7 +82,7 @@ export default function WhatIfSimulator({ baseProperty, onRecalculate, loading }
             value={price}
             onChange={(e) => setPrice(+e.target.value)}
             disabled={loading}
-            className="w-full accent-amber-700"
+            className="w-full accent-yellow-600"
           />
         </SliderRow>
 
@@ -101,7 +101,7 @@ export default function WhatIfSimulator({ baseProperty, onRecalculate, loading }
             value={rate}
             onChange={(e) => setRate(+e.target.value)}
             disabled={loading}
-            className="w-full accent-amber-700"
+            className="w-full accent-yellow-600"
           />
         </SliderRow>
 
@@ -120,7 +120,7 @@ export default function WhatIfSimulator({ baseProperty, onRecalculate, loading }
             value={rent}
             onChange={(e) => setRent(+e.target.value)}
             disabled={loading}
-            className="w-full accent-amber-700"
+            className="w-full accent-yellow-600"
           />
         </SliderRow>
       </div>
@@ -133,8 +133,8 @@ export default function WhatIfSimulator({ baseProperty, onRecalculate, loading }
           className="flex-1 min-w-[200px] rounded-xl py-3 px-4 text-sm font-bold text-white transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
           style={{
             background: !hasChanged || loading
-              ? '#A07850'
-              : 'linear-gradient(135deg, #6B3A1F, #C4956A)'
+              ? '#4A7AC7'
+              : 'linear-gradient(135deg, #1B3A6B, #D4AF37)'
           }}
         >
           {loading ? 'Re-analysing…' : hasChanged ? 'Re-analyse with new values →' : 'Move a slider to re-run'}
@@ -145,9 +145,9 @@ export default function WhatIfSimulator({ baseProperty, onRecalculate, loading }
             onClick={reset}
             className="rounded-xl py-3 px-4 text-sm font-semibold transition-all"
             style={{
-              backgroundColor: '#F5EDE3',
-              color: '#6B3A1F',
-              border: '1px solid #E8D5B7',
+              backgroundColor: '#EEF2FF',
+              color: '#1B3A6B',
+              border: '1px solid #C4D4F5',
             }}
           >
             Reset
@@ -170,16 +170,16 @@ function SliderRow({
   return (
     <div>
       <div className="flex items-baseline justify-between mb-1.5">
-        <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#8B5E3C' }}>
+        <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#2952A3' }}>
           {label}
         </label>
         <div className="flex items-baseline gap-2">
           {changed && (
-            <span className="text-xs line-through" style={{ color: '#A07850' }}>
+            <span className="text-xs line-through" style={{ color: '#4A7AC7' }}>
               {original}
             </span>
           )}
-          <span className="text-sm font-bold" style={{ color: changed ? '#6B3A1F' : '#2C1A0E' }}>
+          <span className="text-sm font-bold" style={{ color: changed ? '#1B3A6B' : '#0D1F3C' }}>
             {value}
           </span>
         </div>

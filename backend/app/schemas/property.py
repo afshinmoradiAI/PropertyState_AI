@@ -98,19 +98,36 @@ class NegotiationResult(BaseModel):
 
 class PropertyReport(BaseModel):
     property: PropertyInput
-    rental_yield: RentalYieldResult
-    cashflow: CashflowResult
-    roi: ROIResult
-    location_risk: LocationRiskResult
-    tax_depreciation: TaxDepreciationResult
-    investment_potential: InvestmentPotentialResult
-    negotiation: NegotiationResult
+    # All result fields are Optional — users can pick which analyses to run.
+    rental_yield: Optional[RentalYieldResult] = None
+    cashflow: Optional[CashflowResult] = None
+    roi: Optional[ROIResult] = None
+    location_risk: Optional[LocationRiskResult] = None
+    tax_depreciation: Optional[TaxDepreciationResult] = None
+    investment_potential: Optional[InvestmentPotentialResult] = None
+    negotiation: Optional[NegotiationResult] = None
+    selected_analyses: Optional[list[str]] = None  # what was actually requested
     generated_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     tokens_used: int = 0
 
 
+# Canonical analysis IDs. Frontend sends these strings; orchestrator filters on them.
+ANALYSIS_IDS = {
+    "rental_yield",
+    "cashflow",
+    "roi",
+    "location_risk",
+    "tax_depreciation",
+    "investment_potential",
+    "negotiation",
+}
+
+
 class AnalyzeRequest(BaseModel):
     property: PropertyInput
+    # If None or empty → run all analyses (backward compatible).
+    # If provided → only the listed analyses run, plus their dependencies.
+    selected_analyses: Optional[list[str]] = None
 
 
 class AnalyzeResponse(BaseModel):

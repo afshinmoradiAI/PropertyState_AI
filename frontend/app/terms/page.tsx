@@ -4,16 +4,16 @@ export const metadata = { title: 'Terms of Service — PropertyState AI' }
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F5EDE3' }}>
-      <header className="border-b" style={{ backgroundColor: '#1A0F07', borderColor: 'rgba(196,149,106,0.4)' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#EEF2FF' }}>
+      <header className="border-b" style={{ backgroundColor: '#0A1628', borderColor: 'rgba(212,175,55,0.4)' }}>
         <div className="max-w-3xl mx-auto px-6 py-4">
-          <Link href="/" className="text-sm font-semibold" style={{ color: '#C4956A' }}>← PropertyState AI</Link>
+          <Link href="/" className="text-sm font-semibold" style={{ color: '#D4AF37' }}>← PropertyState AI</Link>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-6 py-12" style={{ color: '#2C1A0E' }}>
+      <main className="max-w-3xl mx-auto px-6 py-12" style={{ color: '#0D1F3C' }}>
         <h1 className="text-3xl font-black mb-2">Terms of Service</h1>
-        <p className="text-sm mb-8" style={{ color: '#8B5E3C' }}>Last updated: 2026-05-23</p>
+        <p className="text-sm mb-8" style={{ color: '#2952A3' }}>Last updated: 2026-05-23</p>
 
         <div className="rounded-xl p-4 mb-6 text-sm" style={{ backgroundColor: '#FEF3C7', border: '1px solid #F59E0B', color: '#92400E' }}>
           <strong>This is a template.</strong> Replace with terms reviewed by a lawyer in your jurisdiction before going to production.
@@ -63,8 +63,8 @@ export default function TermsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-8">
-      <h2 className="text-lg font-bold mb-2" style={{ color: '#2C1A0E' }}>{title}</h2>
-      <div style={{ color: '#4A2C0A' }}>{children}</div>
+      <h2 className="text-lg font-bold mb-2" style={{ color: '#0D1F3C' }}>{title}</h2>
+      <div style={{ color: '#0D1F3C' }}>{children}</div>
     </div>
   )
 }

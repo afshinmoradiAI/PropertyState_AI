@@ -15,7 +15,8 @@ from app.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
-SCHEMA = """
+# Tables first (no indexes referencing columns that might be missing on old DBs).
+TABLES = """
 CREATE TABLE IF NOT EXISTS users (
     id              TEXT PRIMARY KEY,
     email           TEXT NOT NULL UNIQUE,
@@ -39,9 +40,6 @@ CREATE TABLE IF NOT EXISTS reports (
     created_at    TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
-CREATE INDEX IF NOT EXISTS idx_reports_created_at ON reports(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_reports_user_id ON reports(user_id);
 
 CREATE TABLE IF NOT EXISTS user_plans (
     user_id   TEXT PRIMARY KEY,
@@ -67,32 +65,41 @@ CREATE TABLE IF NOT EXISTS password_resets (
     created_at  TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+"""
 
+# Indexes run AFTER migrations so they can reference newly-added columns.
+INDEXES = """
+CREATE INDEX IF NOT EXISTS idx_reports_created_at ON reports(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_reports_user_id ON reports(user_id);
 CREATE INDEX IF NOT EXISTS idx_password_resets_user_id ON password_resets(user_id);
 """
 
-
-# Lightweight in-place migration for installs created before user_id existed.
+# Lightweight in-place migrations for installs created before columns existed.
 MIGRATIONS = [
     "ALTER TABLE reports ADD COLUMN user_id TEXT REFERENCES users(id) ON DELETE CASCADE",
 ]
 
 
 async def init_db() -> None:
-    """Create the data directory + DB file, apply schema, enable WAL + foreign keys."""
+    """Create the data directory + DB file, apply schema, enable WAL + foreign keys.
+
+    Order matters: tables → migrations → indexes. Indexes referencing migrated columns
+    would fail if created before the migration runs on an old database.
+    """
     data_dir = Path(settings.data_dir)
     data_dir.mkdir(parents=True, exist_ok=True)
 
     async with aiosqlite.connect(settings.db_path) as db:
         await db.execute("PRAGMA journal_mode = WAL")
         await db.execute("PRAGMA foreign_keys = ON")
-        await db.executescript(SCHEMA)
+        await db.executescript(TABLES)
         # Idempotent migrations — try each one, swallow "duplicate column" errors.
         for stmt in MIGRATIONS:
             try:
                 await db.execute(stmt)
             except Exception:
                 pass  # column already exists
+        await db.executescript(INDEXES)
         await db.commit()
     logger.info("db.initialised", path=settings.db_path)
 

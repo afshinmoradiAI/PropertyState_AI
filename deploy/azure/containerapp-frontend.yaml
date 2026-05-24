@@ -1,0 +1,76 @@
+# Azure Container App — Next.js frontend
+#
+# Deploy with:
+#   az containerapp create \
+#     --resource-group propertystate-rg \
+#     --name propertystate-frontend \
+#     --environment propertystate-env \
+#     --yaml deploy/azure/containerapp-frontend.yaml
+#
+# IMPORTANT: NEXT_PUBLIC_API_URL is baked into the build, so build + push the image
+# AFTER the backend Container App exists and you have its FQDN:
+#
+#   BACKEND_URL=$(az containerapp show -g propertystate-rg -n propertystate-backend \
+#     --query properties.configuration.ingress.fqdn -o tsv)
+#   docker build --build-arg NEXT_PUBLIC_API_URL=https://$BACKEND_URL \
+#     -t ACR_NAME.azurecr.io/propertystate-frontend:latest ./frontend
+#   docker push ACR_NAME.azurecr.io/propertystate-frontend:latest
+#
+# Then deploy this YAML. After it's up, copy its FQDN back into the backend's
+# ALLOWED_ORIGINS + FRONTEND_URL env vars and run `az containerapp update`.
+#
+# Replace ACR_NAME, REGISTRY_PASSWORD, and SUB_ID placeholders.
+
+location: eastus
+identity:
+  type: SystemAssigned
+properties:
+  managedEnvironmentId: /subscriptions/SUB_ID/resourceGroups/propertystate-rg/providers/Microsoft.App/managedEnvironments/propertystate-env
+  configuration:
+    activeRevisionsMode: Single
+    ingress:
+      external: true
+      targetPort: 3000
+      transport: auto
+      allowInsecure: false
+      traffic:
+        - latestRevision: true
+          weight: 100
+    registries:
+      - server: ACR_NAME.azurecr.io
+        username: ACR_NAME
+        passwordSecretRef: registry-password
+    secrets:
+      - name: registry-password
+        value: REGISTRY_PASSWORD
+  template:
+    containers:
+      - name: frontend
+        image: ACR_NAME.azurecr.io/propertystate-frontend:latest
+        resources:
+          cpu: 0.25
+          memory: 0.5Gi
+        env:
+          - name: NODE_ENV
+            value: production
+        probes:
+          - type: Liveness
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          - type: Readiness
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+    scale:
+      minReplicas: 1
+      maxReplicas: 3
+      rules:
+        - name: http-rule
+          http:
+            metadata:
+              concurrentRequests: "50"

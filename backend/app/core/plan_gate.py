@@ -38,9 +38,15 @@ async def plan_gate(
 ) -> User | None:
     """Pre-run check: caps + model resolution. Returns the user (or None for anon)."""
     if user is None:
-        # Anonymous users: no plan, no limits beyond IP rate limit.
-        # Use the default model.
-        set_active_model(settings.default_model)
+        # Anonymous users are treated as Free-plan users: Haiku only.
+        # Paid plans (Sonnet/Opus) are not available yet, so we pin to the Free
+        # plan's allowed models even if X-Model requests something else.
+        free_plan = get_plan("free")
+        requested = request.headers.get("x-model")
+        if requested and requested in free_plan.allowed_models:
+            set_active_model(requested)
+        else:
+            set_active_model(free_plan.default_model)
         return None
 
     plan = await plan_store.get_user_plan(user.id)

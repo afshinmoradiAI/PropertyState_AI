@@ -35,7 +35,7 @@ async def analyze_property(
 ) -> AnalyzeResponse:
     """Run full analysis, persist it, and return the complete report + id."""
     try:
-        report = await _orchestrator.analyze(body.property)
+        report = await _orchestrator.analyze(body.property, body.selected_analyses)
         report_id = await report_store.save_report(report, user_id=user.id if user else None)
         if user:
             await plan_store.record_usage(user.id, tokens=report.tokens_used, generations=1)
@@ -55,7 +55,7 @@ async def analyze_property_stream(
 
     async def event_generator():
         try:
-            async for event in _orchestrator.analyze_stream(body.property):
+            async for event in _orchestrator.analyze_stream(body.property, body.selected_analyses):
                 payload = json.dumps({"event": event["event"], "data": event["data"]})
                 yield f"data: {payload}\n\n"
 

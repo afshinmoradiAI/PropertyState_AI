@@ -33,8 +33,8 @@ export default function SuburbSearchForm({ onSubmit, loading }: Props) {
   }
 
   const inputCls = 'w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 transition-colors' +
-    ' border-amber-200 bg-amber-50/30 text-stone-800 placeholder-stone-400 focus:border-amber-600 focus:ring-amber-100'
-  const labelCls = 'block text-xs font-semibold uppercase tracking-wide mb-1 text-amber-800'
+    ' border-blue-200 bg-blue-50/30 text-stone-800 placeholder-stone-400 focus:border-yellow-500 focus:ring-yellow-100'
+  const labelCls = 'block text-xs font-semibold uppercase tracking-wide mb-1 text-blue-900'
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -82,12 +82,12 @@ export default function SuburbSearchForm({ onSubmit, loading }: Props) {
                 onClick={() => set('investment_goal', g.value)}
                 className="rounded-lg p-3 text-left transition-all"
                 style={{
-                  border: active ? '2px solid #6B3A1F' : '1px solid #E8D5B7',
-                  backgroundColor: active ? '#FFF8F0' : '#fff',
+                  border: active ? '2px solid #1B3A6B' : '1px solid #C4D4F5',
+                  backgroundColor: active ? '#F0F5FF' : '#fff',
                 }}
               >
-                <div className="text-sm font-bold" style={{ color: '#2C1A0E' }}>{g.label}</div>
-                <div className="text-[11px] mt-0.5" style={{ color: '#8B5E3C' }}>{g.sub}</div>
+                <div className="text-sm font-bold" style={{ color: '#0D1F3C' }}>{g.label}</div>
+                <div className="text-[11px] mt-0.5" style={{ color: '#2952A3' }}>{g.sub}</div>
               </button>
             )
           })}
@@ -98,7 +98,7 @@ export default function SuburbSearchForm({ onSubmit, loading }: Props) {
         type="submit"
         disabled={loading || !form.suburb || form.budget_min >= form.budget_max}
         className="w-full rounded-xl py-3 text-sm font-bold text-white transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-        style={{ background: loading ? '#A07850' : 'linear-gradient(135deg, #6B3A1F, #C4956A)' }}
+        style={{ background: loading ? '#4A7AC7' : 'linear-gradient(135deg, #1B3A6B, #D4AF37)' }}
       >
         {loading ? 'Searching the suburb…' : 'Find what to buy →'}
       </button>

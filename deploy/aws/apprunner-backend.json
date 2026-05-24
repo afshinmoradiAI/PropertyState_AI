@@ -1,0 +1,62 @@
+{
+  "//": "AWS App Runner service config for the FastAPI backend.",
+  "//1": "Deploy with: aws apprunner create-service --cli-input-json file://deploy/aws/apprunner-backend.json --region us-east-1",
+  "//2": "Prereqs:",
+  "//3": "  1. Push the backend image to ECR: ACCOUNT.dkr.ecr.REGION.amazonaws.com/propertystate-backend:latest",
+  "//4": "  2. Create an ECR access role: AppRunnerECRAccessRole (trust policy: build.apprunner.amazonaws.com)",
+  "//5": "  3. Store secrets in Secrets Manager:",
+  "//6": "       aws secretsmanager create-secret --name propertystate/ANTHROPIC_API_KEY --secret-string sk-ant-...",
+  "//7": "       aws secretsmanager create-secret --name propertystate/JWT_SECRET --secret-string $(openssl rand -hex 32)",
+  "//8": "  4. (Optional) Add an EFS-backed persistent volume — App Runner does NOT yet support EFS mounts.",
+  "//9": "       For persistent SQLite, migrate to RDS PostgreSQL or use ECS Fargate instead.",
+  "//10": "Replace ACCOUNT, REGION, and FRONTEND_URL placeholders below.",
+
+  "ServiceName": "propertystate-backend",
+  "SourceConfiguration": {
+    "AuthenticationConfiguration": {
+      "AccessRoleArn": "arn:aws:iam::ACCOUNT:role/AppRunnerECRAccessRole"
+    },
+    "AutoDeploymentsEnabled": true,
+    "ImageRepository": {
+      "ImageIdentifier": "ACCOUNT.dkr.ecr.REGION.amazonaws.com/propertystate-backend:latest",
+      "ImageRepositoryType": "ECR",
+      "ImageConfiguration": {
+        "Port": "8000",
+        "RuntimeEnvironmentVariables": {
+          "ENV": "production",
+          "LOG_LEVEL": "INFO",
+          "DEFAULT_MODEL": "claude-sonnet-4-6",
+          "MAX_TOKENS": "2048",
+          "DATA_DIR": "/app/data",
+          "RATE_LIMIT_PER_MINUTE": "20",
+          "JWT_ALGORITHM": "HS256",
+          "JWT_EXPIRE_MINUTES": "10080",
+          "EMAIL_PROVIDER": "console",
+          "ALLOWED_ORIGINS": "https://FRONTEND_URL",
+          "FRONTEND_URL": "https://FRONTEND_URL"
+        },
+        "RuntimeEnvironmentSecrets": {
+          "ANTHROPIC_API_KEY": "arn:aws:secretsmanager:REGION:ACCOUNT:secret:propertystate/ANTHROPIC_API_KEY",
+          "JWT_SECRET": "arn:aws:secretsmanager:REGION:ACCOUNT:secret:propertystate/JWT_SECRET"
+        }
+      }
+    }
+  },
+  "InstanceConfiguration": {
+    "Cpu": "0.5 vCPU",
+    "Memory": "1 GB"
+  },
+  "HealthCheckConfiguration": {
+    "Protocol": "HTTP",
+    "Path": "/health",
+    "Interval": 20,
+    "Timeout": 10,
+    "HealthyThreshold": 1,
+    "UnhealthyThreshold": 3
+  },
+  "AutoScalingConfigurationArn": "",
+  "Tags": [
+    { "Key": "Project", "Value": "PropertyState" },
+    { "Key": "Component", "Value": "backend" }
+  ]
+}

@@ -109,8 +109,14 @@ PropertyState_AI/
 │   ├── Dockerfile
 │   └── .env.example
 ├── docker-compose.yml                   # Local dev (backend + frontend)
-├── docker-compose.prod.yml              # Production
-└── .env.prod.example
+├── render.yaml                          # Render Blueprint (recommended)
+└── deploy/
+    ├── aws/
+    │   ├── apprunner-backend.json       # AWS App Runner — backend service config
+    │   └── apprunner-frontend.json      # AWS App Runner — frontend service config
+    └── azure/
+        ├── containerapp-backend.yaml    # Azure Container Apps — backend
+        └── containerapp-frontend.yaml   # Azure Container Apps — frontend
 ```
 
 ---
@@ -296,17 +302,109 @@ npm start          # serve production build
 
 ## Deployment
 
-### Azure (Docker)
+### Render (recommended — one-click Blueprint)
 
-A `docker-compose.prod.yml` is included for production. Copy `.env.prod.example` to `.env.prod`, fill in your API key and frontend URL, then:
+The repo ships with a `render.yaml` Blueprint that defines both services + a persistent 1GB disk for the SQLite database.
 
-```bash
-docker compose -f docker-compose.prod.yml up --build -d
-```
+**Steps:**
 
-Set `ALLOWED_ORIGINS` to your public frontend URL so CORS works correctly.
+1. Push this repo to GitHub.
+2. In the [Render dashboard](https://dashboard.render.com), click **New → Blueprint** and connect this repo.
+3. Render will read `render.yaml` and propose two services:
+   - `propertystate-backend` (FastAPI + SQLite + 1GB disk at `/app/data`)
+   - `propertystate-frontend` (Next.js standalone)
+4. Set the env vars marked `sync: false` (see below).
+5. Click **Apply**. First deploy takes ~5 minutes.
 
-### Vercel + Render / Railway
+**Env vars to fill in:**
 
-- Deploy the `frontend/` directory to Vercel. Set `NEXT_PUBLIC_API_URL` to your backend URL.
-- Deploy the `backend/` directory to Render, Railway, or any container host. Set all backend env vars.
+| Service | Variable | Value |
+|---|---|---|
+| Backend | `ANTHROPIC_API_KEY` | Your Anthropic API key |
+| Frontend | `NEXT_PUBLIC_API_URL` | Backend URL — set **before** first build (baked into bundle) |
+
+After the first deploy you'll have two URLs. Go back and fill in the cross-service URLs:
+
+| Service | Variable | Value |
+|---|---|---|
+| Backend | `ALLOWED_ORIGINS` | `https://propertystate-frontend-XXXX.onrender.com` |
+| Backend | `FRONTEND_URL` | Same as above (used in password-reset emails + OAuth callbacks) |
+
+Then click **Manual Deploy → Clear cache and deploy** on each service to pick up the new values.
+
+**Optional vars** (leave blank unless you use them): `SENTRY_DSN`, `RESEND_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`.
+
+**Plan choice:**
+- **Starter ($7/mo per service)** — no cold starts, persistent disk works. Recommended.
+- **Free** — services sleep after 15 min, disk is ephemeral (SQLite data is lost on restart). OK for testing only.
+
+`JWT_SECRET` is generated automatically by Render via `generateValue: true`.
+
+---
+
+### AWS App Runner
+
+Configs: `deploy/aws/apprunner-backend.json` + `deploy/aws/apprunner-frontend.json`.
+
+App Runner is the AWS equivalent of Render — fully managed containers, autoscaling, HTTPS out of the box. Note: App Runner does **not** support persistent volumes, so SQLite will reset on container replacement. For production, migrate to RDS PostgreSQL or use ECS Fargate with EFS.
+
+**Steps:**
+
+1. Push backend + frontend images to ECR (see header comments in the JSON files).
+2. Store secrets in AWS Secrets Manager:
+   ```bash
+   aws secretsmanager create-secret --name propertystate/ANTHROPIC_API_KEY --secret-string "sk-ant-..."
+   aws secretsmanager create-secret --name propertystate/JWT_SECRET --secret-string "$(openssl rand -hex 32)"
+   ```
+3. Create the IAM role `AppRunnerECRAccessRole` (trust policy: `build.apprunner.amazonaws.com`).
+4. Replace `ACCOUNT`, `REGION`, and `FRONTEND_URL` placeholders in both JSON files.
+5. Deploy the backend first:
+   ```bash
+   aws apprunner create-service --cli-input-json file://deploy/aws/apprunner-backend.json --region us-east-1
+   ```
+6. Take the backend's public URL, rebuild the frontend image with `--build-arg NEXT_PUBLIC_API_URL=https://BACKEND_URL`, push to ECR, then deploy the frontend:
+   ```bash
+   aws apprunner create-service --cli-input-json file://deploy/aws/apprunner-frontend.json --region us-east-1
+   ```
+7. Update the backend's `ALLOWED_ORIGINS` + `FRONTEND_URL` env vars to the frontend's public URL, then redeploy with `aws apprunner update-service`.
+
+---
+
+### Azure Container Apps
+
+Configs: `deploy/azure/containerapp-backend.yaml` + `deploy/azure/containerapp-frontend.yaml`.
+
+Container Apps is Azure's managed serverless container platform — autoscaling, HTTPS ingress, secrets store, optional Azure Files mounts for persistent SQLite.
+
+**Steps:**
+
+1. Create resource group + Container Apps environment:
+   ```bash
+   az group create --name propertystate-rg --location eastus
+   az containerapp env create --name propertystate-env --resource-group propertystate-rg --location eastus
+   ```
+2. Create Azure Container Registry and push images:
+   ```bash
+   az acr create --resource-group propertystate-rg --name propertystateacr --sku Basic
+   az acr login --name propertystateacr
+   docker build -t propertystateacr.azurecr.io/propertystate-backend:latest ./backend
+   docker push propertystateacr.azurecr.io/propertystate-backend:latest
+   ```
+3. Replace `ACR_NAME`, `REGISTRY_PASSWORD`, `SUB_ID`, and URL placeholders in both YAML files. Paste real values for the `anthropic-api-key` and `jwt-secret` entries in the backend YAML.
+4. Deploy the backend first:
+   ```bash
+   az containerapp create \
+     --resource-group propertystate-rg --name propertystate-backend \
+     --environment propertystate-env \
+     --yaml deploy/azure/containerapp-backend.yaml
+   ```
+5. Capture its FQDN, rebuild the frontend image with `--build-arg NEXT_PUBLIC_API_URL=https://<backend-fqdn>`, push, then deploy the frontend:
+   ```bash
+   az containerapp create \
+     --resource-group propertystate-rg --name propertystate-frontend \
+     --environment propertystate-env \
+     --yaml deploy/azure/containerapp-frontend.yaml
+   ```
+6. Update the backend's `ALLOWED_ORIGINS` + `FRONTEND_URL` env vars to the frontend's FQDN and run `az containerapp update`.
+
+For persistent SQLite, uncomment the `volumeMounts` + `volumes` block in `containerapp-backend.yaml` and configure an Azure Files share on the Container Apps environment.

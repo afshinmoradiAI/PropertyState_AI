@@ -34,7 +34,9 @@ async def save_report(report: PropertyReport, user_id: str | None = None) -> str
     """
     report_id = uuid.uuid4().hex
     p = report.property
-    ip = report.investment_potential
+    ip = report.investment_potential  # may be None if user skipped the verdict agent
+    verdict = ip.verdict if ip else None
+    overall_score = ip.overall_score if ip else None
 
     async with connect() as db:
         await db.execute(
@@ -48,14 +50,14 @@ async def save_report(report: PropertyReport, user_id: str | None = None) -> str
                 report_id, user_id,
                 p.address, p.suburb, p.state, p.postcode, p.property_type,
                 p.purchase_price,
-                ip.verdict, ip.overall_score,
+                verdict, overall_score,
                 report.tokens_used,
                 report.model_dump_json(),
             ),
         )
         await db.commit()
 
-    logger.info("report.saved", report_id=report_id, user_id=user_id, address=p.address, verdict=ip.verdict)
+    logger.info("report.saved", report_id=report_id, user_id=user_id, address=p.address, verdict=verdict)
     return report_id
 
 

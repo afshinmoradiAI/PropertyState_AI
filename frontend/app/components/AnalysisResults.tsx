@@ -8,13 +8,13 @@ import DownloadReportButton from './DownloadReportButton'
 import ReportChat from './ReportChat'
 
 interface Props {
-  rentalYield?: RentalYieldResult
-  cashflow?: CashflowResult
-  roi?: ROIResult
-  locationRisk?: LocationRiskResult
-  taxDepreciation?: TaxDepreciationResult
-  investmentPotential?: InvestmentPotentialResult
-  negotiation?: NegotiationResult
+  rentalYield?: RentalYieldResult | null
+  cashflow?: CashflowResult | null
+  roi?: ROIResult | null
+  locationRisk?: LocationRiskResult | null
+  taxDepreciation?: TaxDepreciationResult | null
+  investmentPotential?: InvestmentPotentialResult | null
+  negotiation?: NegotiationResult | null
   report?: PropertyReport
   loading: boolean
 }
@@ -70,11 +70,11 @@ function ScoreBar({ score, max = 10 }: { score: number; max?: number }) {
 
 function Card({ title, icon, children, loading }: { title: string; icon: string; children: React.ReactNode; loading?: boolean }) {
   return (
-    <div className="rounded-2xl shadow-sm p-5" style={{ backgroundColor: '#fff', border: '1px solid #E8D5B7' }}>
+    <div className="rounded-2xl shadow-sm p-5" style={{ backgroundColor: '#fff', border: '1px solid #C4D4F5' }}>
       <div className="flex items-center gap-2 mb-4">
         <span className="text-xl">{icon}</span>
-        <h3 className="font-bold" style={{ color: '#2C1A0E' }}>{title}</h3>
-        {loading && <span className="ml-auto text-xs animate-pulse" style={{ color: '#A07850' }}>Analysing…</span>}
+        <h3 className="font-bold" style={{ color: '#0D1F3C' }}>{title}</h3>
+        {loading && <span className="ml-auto text-xs animate-pulse" style={{ color: '#4A7AC7' }}>Analysing…</span>}
       </div>
       {children}
     </div>
@@ -83,8 +83,8 @@ function Card({ title, icon, children, loading }: { title: string; icon: string;
 
 function PriceBlock({ label, value, tone, hint }: { label: string; value: string; tone: 'neutral' | 'good' | 'warn'; hint?: string }) {
   const colors = {
-    neutral: { bg: '#fff', border: '#E8D5B7', text: '#2C1A0E', label: '#8B5E3C' },
-    good: { bg: '#fff', border: '#C4956A', text: '#065F46', label: '#6B3A1F' },
+    neutral: { bg: '#fff', border: '#C4D4F5', text: '#0D1F3C', label: '#2952A3' },
+    good: { bg: '#fff', border: '#D4AF37', text: '#065F46', label: '#1B3A6B' },
     warn: { bg: '#FEF3C7', border: '#F59E0B', text: '#92400E', label: '#92400E' },
   }[tone]
   return (
@@ -98,11 +98,11 @@ function PriceBlock({ label, value, tone, hint }: { label: string; value: string
 
 function Row({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="flex items-center justify-between py-1.5 last:border-0" style={{ borderBottom: '1px solid #F5EDE3' }}>
-      <span className="text-sm" style={{ color: '#8B5E3C' }}>{label}</span>
+    <div className="flex items-center justify-between py-1.5 last:border-0" style={{ borderBottom: '1px solid #EEF2FF' }}>
+      <span className="text-sm" style={{ color: '#2952A3' }}>{label}</span>
       <div className="text-right">
-        <span className="text-sm font-semibold" style={{ color: '#2C1A0E' }}>{value}</span>
-        {sub && <div className="text-xs" style={{ color: '#A07850' }}>{sub}</div>}
+        <span className="text-sm font-semibold" style={{ color: '#0D1F3C' }}>{value}</span>
+        {sub && <div className="text-xs" style={{ color: '#4A7AC7' }}>{sub}</div>}
       </div>
     </div>
   )
@@ -116,24 +116,24 @@ export default function AnalysisResults({ rentalYield, cashflow, roi, locationRi
 
       {/* Verdict Banner */}
       {investmentPotential && (
-        <div className="rounded-2xl shadow-sm p-6" style={{ backgroundColor: '#fff', border: '1px solid #E8D5B7' }}>
+        <div className="rounded-2xl shadow-sm p-6" style={{ backgroundColor: '#fff', border: '1px solid #C4D4F5' }}>
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#A07850' }}>Investment Verdict</p>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#4A7AC7' }}>Investment Verdict</p>
               <VerdictBadge verdict={investmentPotential.verdict} />
-              <span className="ml-3 text-sm" style={{ color: '#8B5E3C' }}>
-                Confidence: <b style={{ color: '#2C1A0E' }}>{investmentPotential.confidence}</b>
+              <span className="ml-3 text-sm" style={{ color: '#2952A3' }}>
+                Confidence: <b style={{ color: '#0D1F3C' }}>{investmentPotential.confidence}</b>
               </span>
             </div>
             <div className="text-right">
-              <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#A07850' }}>Overall Score</p>
-              <div className="text-3xl font-black" style={{ color: '#2C1A0E' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#4A7AC7' }}>Overall Score</p>
+              <div className="text-3xl font-black" style={{ color: '#0D1F3C' }}>
                 {investmentPotential.overall_score}
-                <span className="text-base font-normal" style={{ color: '#A07850' }}>/10</span>
+                <span className="text-base font-normal" style={{ color: '#4A7AC7' }}>/10</span>
               </div>
             </div>
           </div>
-          <p className="mt-4 text-sm leading-relaxed pt-4" style={{ color: '#4A2C0A', borderTop: '1px solid #F5EDE3' }}>
+          <p className="mt-4 text-sm leading-relaxed pt-4" style={{ color: '#0D1F3C', borderTop: '1px solid #EEF2FF' }}>
             {investmentPotential.recommendation}
           </p>
           <div className="mt-4 grid grid-cols-2 gap-3">
@@ -141,7 +141,7 @@ export default function AnalysisResults({ rentalYield, cashflow, roi, locationRi
               <p className="text-xs font-bold mb-2 text-emerald-700">Strengths</p>
               <ul className="space-y-1">
                 {investmentPotential.key_strengths.map((s, i) => (
-                  <li key={i} className="text-xs flex gap-1.5" style={{ color: '#4A2C0A' }}>
+                  <li key={i} className="text-xs flex gap-1.5" style={{ color: '#0D1F3C' }}>
                     <span className="text-emerald-600 mt-0.5">✓</span>{s}
                   </li>
                 ))}
@@ -151,7 +151,7 @@ export default function AnalysisResults({ rentalYield, cashflow, roi, locationRi
               <p className="text-xs font-bold mb-2 text-red-600">Risks</p>
               <ul className="space-y-1">
                 {investmentPotential.key_risks.map((r, i) => (
-                  <li key={i} className="text-xs flex gap-1.5" style={{ color: '#4A2C0A' }}>
+                  <li key={i} className="text-xs flex gap-1.5" style={{ color: '#0D1F3C' }}>
                     <span className="text-red-500 mt-0.5">!</span>{r}
                   </li>
                 ))}
@@ -165,14 +165,14 @@ export default function AnalysisResults({ rentalYield, cashflow, roi, locationRi
       {negotiation && (
         <div className="rounded-2xl shadow-sm p-6"
           style={{
-            background: 'linear-gradient(135deg, #FFF8F0 0%, #F5EDE3 100%)',
-            border: '1px solid #C4956A',
+            background: 'linear-gradient(135deg, #F0F5FF 0%, #EEF2FF 100%)',
+            border: '1px solid #D4AF37',
           }}>
           <div className="flex items-center gap-2 mb-4">
             <span className="text-xl">🤝</span>
-            <h3 className="font-bold" style={{ color: '#2C1A0E' }}>Negotiation Strategy</h3>
+            <h3 className="font-bold" style={{ color: '#0D1F3C' }}>Negotiation Strategy</h3>
             <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-semibold"
-              style={{ backgroundColor: '#fff', color: '#8B5E3C', border: '1px solid #E8D5B7' }}>
+              style={{ backgroundColor: '#fff', color: '#2952A3', border: '1px solid #C4D4F5' }}>
               {negotiation.market_position.replace(/_/g, ' ')} · {negotiation.confidence} confidence
             </span>
           </div>
@@ -210,18 +210,18 @@ export default function AnalysisResults({ rentalYield, cashflow, roi, locationRi
           )}
 
           <div className="mb-4">
-            <p className="text-xs font-bold mb-2" style={{ color: '#6B3A1F' }}>Negotiation levers (in priority)</p>
+            <p className="text-xs font-bold mb-2" style={{ color: '#1B3A6B' }}>Negotiation levers (in priority)</p>
             <div className="flex flex-wrap gap-2">
               {negotiation.negotiation_levers.map((lever, i) => (
                 <span key={i} className="text-xs font-semibold px-3 py-1 rounded-full"
-                  style={{ backgroundColor: '#fff', color: '#6B3A1F', border: '1px solid #C4956A' }}>
+                  style={{ backgroundColor: '#fff', color: '#1B3A6B', border: '1px solid #D4AF37' }}>
                   {i + 1}. {lever}
                 </span>
               ))}
             </div>
           </div>
 
-          <p className="text-sm leading-relaxed" style={{ color: '#4A2C0A' }}>
+          <p className="text-sm leading-relaxed" style={{ color: '#0D1F3C' }}>
             <b>Strategy: </b>{negotiation.strategy}
           </p>
         </div>
@@ -360,8 +360,8 @@ export default function AnalysisResults({ rentalYield, cashflow, roi, locationRi
               >
                 {taxDepreciation.is_negatively_geared ? 'Negatively Geared' : 'Positively Geared'}
               </div>
-              <p className="mt-3 text-xs leading-relaxed" style={{ color: '#8B5E3C' }}>{taxDepreciation.commentary}</p>
-              <p className="mt-2 text-[10px] italic" style={{ color: '#A07850' }}>
+              <p className="mt-3 text-xs leading-relaxed" style={{ color: '#2952A3' }}>{taxDepreciation.commentary}</p>
+              <p className="mt-2 text-[10px] italic" style={{ color: '#4A7AC7' }}>
                 Estimates only — confirm with a quantity surveyor & accountant.
               </p>
             </>
@@ -375,11 +375,11 @@ export default function AnalysisResults({ rentalYield, cashflow, roi, locationRi
         <>
           <div className="rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4"
             style={{
-              background: 'linear-gradient(135deg, #2C1A0E 0%, #6B3A1F 100%)',
+              background: 'linear-gradient(135deg, #0D1F3C 0%, #1B3A6B 100%)',
             }}>
             <div className="text-left">
-              <p className="text-sm font-bold" style={{ color: '#FFF8F0' }}>Analysis complete</p>
-              <p className="text-xs mt-0.5" style={{ color: '#C4956A' }}>
+              <p className="text-sm font-bold" style={{ color: '#F0F5FF' }}>Analysis complete</p>
+              <p className="text-xs mt-0.5" style={{ color: '#D4AF37' }}>
                 Generated {new Date(report.generated_at).toLocaleString('en-AU')} · {report.tokens_used.toLocaleString()} tokens used
               </p>
             </div>
