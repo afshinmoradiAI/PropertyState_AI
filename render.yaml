@@ -1,4 +1,4 @@
-# Render Blueprint for PropertyState AI
+# Render Blueprint for PropertyState AI — FREE TIER
 # Deploys backend (FastAPI + SQLite) and frontend (Next.js) as two web services.
 #
 # Setup:
@@ -18,9 +18,23 @@
 #   Frontend → NEXT_PUBLIC_API_URL = https://propertystate-backend-XXXX.onrender.com
 # Then click "Manual Deploy" on each service to rebuild with the new values.
 #
-# The Starter plan ($7/mo each) is recommended so services don't sleep and the
-# backend gets a 1GB persistent disk for SQLite. Free tier works for testing
-# but the disk is ephemeral so SQLite data is lost on restart.
+# ─── FREE TIER NOTES — read this! ─────────────────────────────────────────────
+# This file uses Render's FREE plan ($0/mo) for both services. Trade-offs:
+#   ✅ $0/month — no surprise bills
+#   ✅ Plenty fast enough for demos, learning, sharing with friends
+#   ❌ Services SLEEP after 15 minutes of inactivity — first visit takes ~30s
+#      to wake up. Subsequent requests are instant.
+#   ❌ No persistent disk — SQLite database lives in ephemeral storage and
+#      RESETS on every deploy/restart. Saved reports will disappear.
+#      → Anonymous use still works. Auth/library features will lose data.
+#   ❌ Slower builds (0.1 CPU / 512MB RAM) — first deploy may take ~7-10 min.
+#   ❌ 750 hours/month free per service (plenty if you only have a couple).
+#
+# When you have real users or want the saved-reports feature:
+#   • Change both `plan: free` → `plan: starter` ($7/mo each = $14/mo total)
+#   • Re-add the `disk:` block to the backend service (see commented section below)
+#   • Push to git — Render will redeploy with the upgraded plan
+# ──────────────────────────────────────────────────────────────────────────────
 
 services:
   # ────────────────────────────────────────────────────────────────────────────
@@ -31,14 +45,16 @@ services:
     runtime: docker
     rootDir: backend
     dockerfilePath: ./Dockerfile
-    plan: starter          # $7/mo — no sleep + persistent disk
+    plan: free             # $0/mo — sleeps after 15min idle, ephemeral storage
     region: oregon         # change to singapore, frankfurt, ohio etc if needed
     healthCheckPath: /health
     autoDeploy: true       # auto-redeploy on push to main
-    disk:
-      name: data
-      mountPath: /app/data
-      sizeGB: 1
+    # ── Persistent disk DISABLED on free plan (free tier doesn't support disks).
+    # ── To enable when upgrading to Starter, uncomment and switch plan to "starter":
+    # disk:
+    #   name: data
+    #   mountPath: /app/data
+    #   sizeGB: 1
     envVars:
       # ── Required — set in dashboard ──
       - key: ANTHROPIC_API_KEY
@@ -58,11 +74,11 @@ services:
       - key: LOG_LEVEL
         value: INFO
       - key: DEFAULT_MODEL
-        value: claude-sonnet-4-6
+        value: claude-haiku-4-5-20251001   # cheapest model — keeps API costs minimal
       - key: MAX_TOKENS
         value: "2048"
       - key: DATA_DIR
-        value: /app/data
+        value: /tmp                        # ephemeral on free plan; OK for demos
       - key: RATE_LIMIT_PER_MINUTE
         value: "20"
       - key: JWT_ALGORITHM
@@ -98,7 +114,7 @@ services:
     runtime: docker
     rootDir: frontend
     dockerfilePath: ./Dockerfile
-    plan: starter          # $7/mo — no sleep
+    plan: free             # $0/mo — sleeps after 15min idle
     region: oregon         # keep same region as backend for lower latency
     healthCheckPath: /
     autoDeploy: true
