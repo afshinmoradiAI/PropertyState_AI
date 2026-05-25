@@ -2,7 +2,10 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    anthropic_api_key: str
+    # Optional — defaults to "" so the app boots without a key set.
+    # Without a key, actual Anthropic calls will fail; the UI still works.
+    # Set this in Render dashboard / .env when ready to enable analyses.
+    anthropic_api_key: str = ""
     log_level: str = "INFO"
     default_model: str = "claude-sonnet-4-6"
     max_tokens: int = 2048

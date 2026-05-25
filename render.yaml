@@ -56,9 +56,11 @@ services:
     #   mountPath: /app/data
     #   sizeGB: 1
     envVars:
-      # ── Required — set in dashboard ──
+      # ── Optional — set in dashboard when you want AI analyses to work ──
+      # App boots without it; only the /api/property/analyze endpoints will fail.
+      # This matches the CorpusAI pattern: deploy first, add key later.
       - key: ANTHROPIC_API_KEY
-        sync: false                        # never commit; set in dashboard
+        sync: false                        # never commit; set in dashboard later
       - key: ALLOWED_ORIGINS
         sync: false                        # set after frontend deploys: https://<frontend-url>
       - key: FRONTEND_URL
