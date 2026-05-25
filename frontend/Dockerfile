@@ -24,6 +24,8 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
+# Render injects PORT (usually 10000); the standalone server.js reads it at runtime.
+# We default to 3000 so local `docker run` keeps working without -e PORT=...
 ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0
@@ -42,6 +44,6 @@ USER nextjs
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD wget -qO- http://localhost:3000 || exit 1
+    CMD wget -qO- http://localhost:${PORT:-3000} || exit 1
 
 CMD ["node", "server.js"]
