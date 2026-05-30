@@ -5,7 +5,7 @@ description = "Add your description here"
 requires-python = ">=3.12"
 dependencies = [
     "aiosqlite>=0.22.1",
-    "anthropic>=0.99.0",
+    "anthropic>=0.105.2",
     "autogen-agentchat>=0.7.5",
     "autogen-ext[openai]>=0.7.5",
     "bcrypt>=5.0.0",
